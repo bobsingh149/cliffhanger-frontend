@@ -1,13 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 class OnboardingPage extends StatefulWidget {
+  static const String routePath = "/onboarding";
+
   const OnboardingPage({super.key});
 
   @override
- State<OnboardingPage> createState() => _OnboardingPageState();
+  State<OnboardingPage> createState() => _OnboardingPageState();
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
@@ -15,7 +18,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   File? _imageFile;
   final _formKey = GlobalKey<FormState>();
   String _name = '';
-  String _age = '';
+  String? _age; // Change to String? for Dropdown
   String _bio = '';
 
   Future<void> _pickImage(ImageSource source) async {
@@ -106,13 +109,31 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     return null;
                   },
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: 10.h),
 
-                // Age Input
-                TextFormField(
+                // Age Dropdown
+                DropdownButtonFormField<String>(
+                  menuMaxHeight: 0.3.sh,
                   decoration: InputDecoration(labelText: 'Age'),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) => _age = value,
+                  value: _age,
+                  items: List.generate(100, (index) {
+                    return DropdownMenuItem<String>(
+                      value: (index + 1).toString(),
+                      child: Text((index + 1).toString()),
+                    );
+                  }),
+                  onChanged: (value) {
+                    setState(() {
+                      _age = value;
+                    });
+                  },
+                  // Optional: Add a validator if required
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select your age';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 10),
 

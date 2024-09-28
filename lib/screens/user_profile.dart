@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ProfilePage extends StatefulWidget {
+  static const String routePath = "/profile";
 
-   const ProfilePage({super.key});
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -35,8 +36,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:  Text("Mansi Great"),
-        leading: const Icon(Icons.arrow_back),
+        title: Text("Mansi Great"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: DefaultTabController(
         length: tabTitles.length,
@@ -44,12 +50,9 @@ class _ProfilePageState extends State<ProfilePage> {
           children: <Widget>[
             // User profile section
             UserProfileSection(),
-            
+
             // TabBar for the three sections
             TabBar(
-              labelColor: Colors.blue,
-              unselectedLabelColor: Colors.black,
-              indicatorColor: Colors.blue,
               tabs: tabTitles.map((title) => Tab(text: title)).toList(),
             ),
             Expanded(
@@ -84,7 +87,7 @@ class UserProfileSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:  EdgeInsets.all(16.0.r),
+      padding: EdgeInsets.all(16.0.r),
       child: Column(
         children: [
           // Profile picture and details
@@ -92,18 +95,20 @@ class UserProfileSection extends StatelessWidget {
             children: [
               // Profile picture
               CircleAvatar(
-                radius: 40.r,
-                backgroundImage: AssetImage('assets/profile.jpg'), // Add profile image path here
+                radius:60.r,
+                backgroundImage: AssetImage(
+                    'assets/profile.jpg'), // Add profile image path here
               ),
               SizedBox(width: 16.w),
-              
+
               // Name and bio
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Mansi Great',
-                    style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
+                    style:
+                        TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -120,4 +125,3 @@ class UserProfileSection extends StatelessWidget {
     );
   }
 }
-
