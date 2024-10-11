@@ -72,12 +72,14 @@ class _SignInPageState extends State<SignInPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
             AppTheme.secondaryColor,
+            
               AppTheme.primaryColor,
               AppTheme.secondaryColor,
+            
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
