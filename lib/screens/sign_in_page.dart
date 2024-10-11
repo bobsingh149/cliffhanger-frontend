@@ -77,7 +77,7 @@ class _SignInPageState extends State<SignInPage> {
             colors: [
             AppTheme.secondaryColor,
               AppTheme.primaryColor,
-              Colors.amber,
+              AppTheme.secondaryColor,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
