@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,9 +16,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final ImagePicker _picker = ImagePicker();
   File? _imageFile;
   final _formKey = GlobalKey<FormState>();
-  String _name = '';
-  String? _age; // Change to String? for Dropdown
-  String _bio = '';
+
+  // Create TextEditingController for name and bio
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  
+  String? _age; // String? for the dropdown value
+
+  @override
+  void dispose() {
+    // Dispose the controllers when the widget is destroyed
+    _nameController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source);
@@ -32,11 +42,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
+      // Read values from the controllers
+      final String name = _nameController.text;
+      final String bio = _bioController.text;
+
       // Handle the submission of the data
-      print('Name: $_name');
+      print('Name: $name');
       print('Age: $_age');
-      print('Bio: $_bio');
-      // You can also navigate to the next page or save the data here
+      print('Bio: $bio');
+
+      // Navigate to the next page or save the data here
     }
   }
 
@@ -98,10 +113,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ),
                 SizedBox(height: 20),
 
-                // Name Input
+                // Name Input with TextEditingController
                 TextFormField(
+                  controller: _nameController, // Use controller
                   decoration: InputDecoration(labelText: 'Name *'),
-                  onChanged: (value) => _name = value,
                   validator: (value) {
                     if (value!.isEmpty) {
                       return 'Please enter your name';
@@ -127,7 +142,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       _age = value;
                     });
                   },
-                  // Optional: Add a validator if required
                   validator: (value) {
                     if (value == null) {
                       return 'Please select your age';
@@ -137,11 +151,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ),
                 SizedBox(height: 10),
 
-                // Bio Input
+                // Bio Input with TextEditingController
                 TextFormField(
+                  controller: _bioController, // Use controller
                   decoration: InputDecoration(labelText: 'Bio'),
                   maxLines: 3,
-                  onChanged: (value) => _bio = value,
                 ),
                 SizedBox(height: 20),
 
@@ -157,14 +171,4 @@ class _OnboardingPageState extends State<OnboardingPage> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    title: 'Onboarding Page',
-    theme: ThemeData(
-      primarySwatch: Colors.deepPurple,
-    ),
-    home: OnboardingPage(),
-  ));
 }

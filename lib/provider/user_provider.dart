@@ -12,6 +12,7 @@ class UserProvider with ChangeNotifier {
 
   UserInfo? get user => _user; // Getter for user
 
+
   // Method to fetch user data from the API
   Future<void> fetchUser(String userId) async {
     try {

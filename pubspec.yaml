@@ -39,7 +39,24 @@ dependencies:
   flutter_screenutil: ^5.9.3
   image_picker: ^1.1.2
   http: ^1.2.2
-  google_fonts: 6.2.0
+  google_fonts: ^6.2.0
+  font_awesome_flutter: ^10.7.0
+  loading_animation_widget: ^1.2.1
+  image_picker_web: ^4.0.0
+  stomp_dart_client: ^2.1.0
+  logger: ^2.4.0
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  uuid: ^4.5.1
+  intl: ^0.19.0
+  google_sign_in: ^6.2.1
+
+
+
+
+
+
   
 dev_dependencies:
   flutter_test:

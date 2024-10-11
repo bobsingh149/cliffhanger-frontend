@@ -1,5 +1,12 @@
+import 'package:barter_frontend/models/book.dart';
+import 'package:barter_frontend/models/book_category.dart';
+import 'package:barter_frontend/provider/post_provider.dart';
+import 'package:barter_frontend/widgets/common_widgets.dart';
+import 'package:barter_frontend/widgets/user_post.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
   static const String routePath = "/profile";
@@ -11,32 +18,30 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final List<String> tabTitles = [
-    'Currently Reading',
-    'Barter Books',
-    'Favourite Books'
-  ];
+  PostProvider? provider;
+  bool isInit = true;
+  bool isLoading = false;
 
-  final Map<String, List<Map<String, String>>> tabData = {
-    'Currently Reading': [
-      {'title': 'Book 1', 'subtitle': 'Author: Author 1'},
-      {'title': 'Book 2', 'subtitle': 'Author: Author 2'}
-    ],
-    'Barter Books': [
-      {'title': 'Barter Book 1', 'subtitle': 'Status: Available'},
-      {'title': 'Barter Book 2', 'subtitle': 'Status: Traded'}
-    ],
-    'Favourite Books': [
-      {'title': 'Favourite Book 1', 'subtitle': 'Author: Author A'},
-      {'title': 'Favourite Book 2', 'subtitle': 'Author: Author B'}
-    ],
-  };
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (isInit) {
+      provider = Provider.of<PostProvider>(context, listen: true);
+      provider!.setUserPosts("userid").then((_) {
+        setState(() {
+          isLoading = false;
+        });
+      });
+
+      isInit = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Mansi Great"),
+        title: isLoading ? const SizedBox() : Text("Mansi Great"),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -44,42 +49,52 @@ class _ProfilePageState extends State<ProfilePage> {
           },
         ),
       ),
-      body: DefaultTabController(
-        length: tabTitles.length,
-        child: Column(
-          children: <Widget>[
-            // User profile section
-            UserProfileSection(),
+      body: isLoading
+          ? CommonWidget.getLoader()
+          : DefaultTabController(
+              length: postCategoryList.length,
+              child: Column(
+                children: <Widget>[
+                  // User profile section
+                  UserProfileSection(),
 
-            // TabBar for the three sections
-            TabBar(
-              tabs: tabTitles.map((title) => Tab(text: title)).toList(),
-            ),
-            Expanded(
-              child: TabBarView(
-                children: tabTitles.map((title) {
-                  return buildTabContent(title);
-                }).toList(),
+                  // TabBar for the three sections
+                  TabBar(
+                    tabs: postCategoryList
+                        .map((title) => Tab(text: title.displayName))
+                        .toList(),
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: postCategoryList.map((title) {
+                        return buildTabContent(title);
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget buildTabContent(String tabTitle) {
-    List<Map<String, String>> items = tabData[tabTitle] ?? [];
+  Widget buildTabContent(PostCategory tabTitle) {
+    List<UserBook> books = provider!.profilePosts![tabTitle] ?? [];
 
-    return ListView.builder(
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(items[index]['title']!),
-          subtitle: Text(items[index]['subtitle']!),
-        );
-      },
-    );
+    return GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: kIsWeb ? 4 : 3, // 3 items per row
+          childAspectRatio:
+              4 / 5, // Aspect ratio for each tile (height > width)
+          mainAxisSpacing: 10.h,
+          crossAxisSpacing: 10.w,
+        ),
+        itemCount: books.length,
+        itemBuilder: (context, index) {
+          final userBook = books[index];
+          return UserPost(
+            userBook: userBook,
+          );
+        });
   }
 }
 
@@ -95,7 +110,7 @@ class UserProfileSection extends StatelessWidget {
             children: [
               // Profile picture
               CircleAvatar(
-                radius:60.r,
+                radius: 60.r,
                 backgroundImage: AssetImage(
                     'assets/profile.jpg'), // Add profile image path here
               ),

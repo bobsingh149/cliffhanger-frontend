@@ -3,13 +3,16 @@
 import 'dart:convert';
 import 'package:barter_frontend/constants/api_constants.dart';
 import 'package:barter_frontend/models/user_info.dart';
+import 'package:barter_frontend/utils/http_client.dart';
+import 'package:barter_frontend/utils/service_utils.dart';
 import 'package:http/http.dart' as http;
 
 class UserService {
   final http.Client client;
 
   UserService({http.Client? client})
-      : client = client ?? http.Client(); // Allows for dependency injection
+      : client = client ??
+            AppHttpClient.instance.client; // Allows for dependency injection
 
   Future<UserInfo?> fetchUser(String userId) async {
     final response =
@@ -18,7 +21,7 @@ class UserService {
     if (response.statusCode == 200) {
       return UserInfo.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to load user');
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
 
@@ -31,12 +34,12 @@ class UserService {
             body: jsonEncode(user.toJson()));
 
     if (response.statusCode != 201) {
-      throw Exception(jsonDecode(response.body)["message"]);
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
 
   // Close the client if needed (e.g., during disposal)
   void dispose() {
-    client.close();
+    AppHttpClient.instance.dispose();
   }
 }
