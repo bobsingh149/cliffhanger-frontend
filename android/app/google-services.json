@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "450436408734",
+    "project_id": "novelnest-827a6",
+    "storage_bucket": "novelnest-827a6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:450436408734:android:c93b8bcac9a4bc1bb7628f",
+        "android_client_info": {
+          "package_name": "com.example.barter_frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "450436408734-c9vdjvqlpn2smntjqskccbuchn2gavv6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.barter_frontend",
+            "certificate_hash": "56607526efdbb344e2648b9683694f551968288f"
+          }
+        },
+        {
+          "client_id": "450436408734-boc9lt5sbnckilhrat3qamodm119vskq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6bZN8lbHaS41jpCs8IVLbVymgq6-UbTA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "450436408734-boc9lt5sbnckilhrat3qamodm119vskq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "450436408734-v8l5v9954ookiibite4n7n6il8tlv9d9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.barterFrontend"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
