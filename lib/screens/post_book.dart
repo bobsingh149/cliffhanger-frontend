@@ -20,10 +20,8 @@ class PostBookPage extends StatefulWidget {
 }
 
 class _PostBookPageState extends State<PostBookPage> {
-  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _captionController = TextEditingController();
   PostCategory? _selectedCategory = PostCategory.currentlyReading;
-  String? _selectedBook;
   final List<String> mockBooks = ["book1", "book2", "book3"];
   bool isLoading = true;
   bool isInit = true;
