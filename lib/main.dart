@@ -2,7 +2,7 @@ import 'package:barter_frontend/provider/book_provider.dart';
 import 'package:barter_frontend/provider/chat_provider.dart';
 import 'package:barter_frontend/provider/post_provider.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
-import 'package:barter_frontend/screens/chat_screeen.dart';
+import 'package:barter_frontend/screens/chat_screen.dart';
 import 'package:barter_frontend/screens/home_page.dart';
 import 'package:barter_frontend/screens/post_book.dart';
 import 'package:barter_frontend/screens/sign_in_page.dart';
