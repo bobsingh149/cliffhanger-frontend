@@ -18,27 +18,61 @@ class PostProvider with ChangeNotifier {
     return _proflePosts;
   }
 
-  Future<void> setUserPosts(String userId) async {
-    isLoading = true;
-    // notifyListeners();
-
+  Future<Map<PostCategory, List<UserBook>>?> getUserPosts(String userId) async {
     try {
       List<UserBook> posts = await _postService.getPostsByUser(userId);
       _logger.i(posts);
       for (var category in postCategoryList) {
         _proflePosts![category] = [];
       }
-
-      _logger.d("working");
       for (var post in posts) {
         _proflePosts![post.category]!.add(post);
       }
+
       _logger.i("success");
+      return _proflePosts;
+
     } catch (err) {
       _logger.e(err);
-    } finally {
-      isLoading = false;
-      // notifyListeners();
+    }
+  }
+
+  List<UserBook>? _feedPosts;
+
+  List<UserBook>? get feedPosts => _feedPosts;
+
+  Future<List<UserBook>> getFeedPosts() async {
+    try {
+      // TODO: Replace with actual API call
+      _feedPosts = [
+        UserBook(
+          id: "id1",
+          title: "The Great Gatsby",
+          score: 4,
+          userId: "user1",
+          username: "John Doe",
+          caption: "Classic American novel",
+          likesCount: 10,
+          coverImages: [
+            '',
+            '',
+            'https://res.cloudinary.com/dllr1e6gn/image/upload/v1/profile_images/aemio6hooqxp1eiqzpev'
+          ],
+          comments: [
+            Comment(
+                userId: "user2", username: "Jane Smith", text: "Great book!"),
+            Comment(userId: "user3", username: "Alex Johnson", text: "Love it"),
+          ],
+          category: PostCategory.barter,
+          createdAt: DateTime.now(),
+          postImage: null,
+        ),
+        // ... other mock posts ...
+      ];
+      return _feedPosts!;
+    } catch (err) {
+      _logger.e(err);
+      throw err;
     }
   }
 }

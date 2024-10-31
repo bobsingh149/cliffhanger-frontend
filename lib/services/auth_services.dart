@@ -3,15 +3,14 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
- 
 
-final GoogleSignIn _googleSignIn = GoogleSignIn(
-  clientId: '450436408734-boc9lt5sbnckilhrat3qamodm119vskq.apps.googleusercontent.com',
-  scopes: ["email"],
-);
-//
-   static AuthService? _instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId:
+        '450436408734-boc9lt5sbnckilhrat3qamodm119vskq.apps.googleusercontent.com',
+    scopes: ["email"],
+  );
 
+  static AuthService? _instance;
 
   static AuthService get getInstance {
     _instance ??= AuthService();
@@ -19,11 +18,11 @@ final GoogleSignIn _googleSignIn = GoogleSignIn(
     return _instance!;
   }
 
-
   // Sign up with email and password
   Future<User?> signUpWithEmail(String email, String password) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -47,21 +46,23 @@ final GoogleSignIn _googleSignIn = GoogleSignIn(
   }
 
   // Google Sign In
-  Future<User?> signInWithGoogle() async {
+  Future<UserCredential?> signInWithGoogle() async {
     try {
+
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw Exception('Google sign-in was canceled');
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
-      return userCredential.user;
+      UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception('Google sign-in failed: ${e.message}');
     }
@@ -74,7 +75,7 @@ final GoogleSignIn _googleSignIn = GoogleSignIn(
   }
 
   // Check if user is signed in
-  User? get user {
+  User? get currentUser {
     return _auth.currentUser;
   }
 }

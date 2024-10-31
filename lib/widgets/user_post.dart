@@ -1,106 +1,88 @@
 import 'package:barter_frontend/models/book.dart';
+import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:barter_frontend/widgets/book_details_dialog.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 
-class UserPost extends StatefulWidget {
+class UserPost extends StatelessWidget {
   final UserBook userBook;
   const UserPost({super.key, required this.userBook});
 
   @override
-  State<UserPost> createState() => _UserPostState();
-}
-
-class _UserPostState extends State<UserPost> {
-  @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.hardEdge,
-      
-      children: [
-                    
-        Container(
-          margin: EdgeInsets.only(left: 10.w, right: 10.w, top: 12.h),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.0.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                blurRadius: 10.0,
-                spreadRadius: 5.0,
-                offset: const Offset(0, 5),
-              ),
-            ],
+    final theme = Theme.of(context);
+
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 10.w, vertical: 12.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Post Image
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
+            child: CachedNetworkImage(
+              imageUrl: userBook.postImage ?? (userBook.coverImages?.isNotEmpty == true ? userBook.coverImages![0] : ''),
+              height: 250.h,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+              errorWidget: (context, url, error) {
+                AppLogger.instance.e('Error loading image: $url', error: error);
+                return Icon(Icons.error);
+              },
+            ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
             
-            
-            children: [
-              // Post Image
-              Center(
-                child: Padding(
-                  padding:  EdgeInsets.only(top: 5.h),
-                  child: 
-                            
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12.0),
-                          topRight: Radius.circular(12.0),
+            padding: EdgeInsets.all(16.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Post Title and Book Icon (now tappable)
+                InkWell(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => BookDetailsDialog(userBook: userBook),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          userBook.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                        child: Image.network(
-                          widget.userBook.postImage ?? widget.userBook.coverImages![1],
-                          height: 250.h,
-                          width: double.infinity,
-                          
-                          fit: BoxFit.contain,
-                        ),
-                      ),    
-                
+                      ),
+                      SizedBox(width: 8.w),
+                      FaIcon(
+                        FontAwesomeIcons.bookOpen,
+                        color: theme.colorScheme.secondary.withOpacity(0.7),
+                        size: 20,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(
-                height: 10.h,
-              ),
-              Padding(
-                padding: EdgeInsets.all(10.0.r),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Post Title
-                    Text(
-                      widget.userBook.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge!
-                          .copyWith(color: Colors.black),
-                    ),
-                    SizedBox(height: 7.h),
-                    // Post Caption
-                    Text(
-                      widget.userBook.caption,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                SizedBox(height: 8.h),
+                // Post Caption
+                Text(
+                  userBook.caption,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-         Positioned(
-          
-                  right: 5.w,
-                  top: 5.h,
-                  child: 	IconButton(onPressed: (){}, icon: Icon(Icons.more_vert,size: 30.r,)))
-,
-      ],
+        ],
+      ),
     );
   }
 }

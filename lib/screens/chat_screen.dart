@@ -1,58 +1,84 @@
 import 'package:barter_frontend/models/chat.dart';
+import 'package:barter_frontend/models/contact.dart';
+import 'package:barter_frontend/models/user_info.dart';
 import 'package:barter_frontend/provider/chat_provider.dart';
+import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_web/image_picker_web.dart';
 
 class ChatScreen extends StatefulWidget {
+  static const routePath = '/chat';
+  final ContactModel contact;
+
+  const ChatScreen({
+    Key? key,
+    required this.contact,
+  
+  }) : super(key: key);
+
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  
   ChatProvider? _provider;
   final TextEditingController _messageController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  Uint8List? _imageData;
 
   @override
   Widget build(BuildContext context) {
     _provider = Provider.of<ChatProvider>(context);
     return Scaffold(
-        backgroundColor: Colors.grey[200],
-        appBar: AppBar(
-          title: Text('Mansi'),
-          centerTitle: true,
-          elevation: 0,
-        ),
-        body: 
-
-               Column(
+        body: Column(
+          children: [
+            AppBar(
+              title: Text(widget.contact.getDisplayName()),
+              centerTitle: true,
+              elevation: 0,
+            ),
+            Expanded(
+              child: Column(
                 children: [
                   Expanded(
-                    child: 
-
-                    StreamBuilder<List<ChatModel>>(
+                    child: StreamBuilder<List<ChatModel>>(
             stream: _provider!.getMessages(""),
             builder: (context, snapshot) {
               // if (snapshot.connectionState == ConnectionState.waiting) {
               // }
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('No messages yet.',style: TextStyle(color: Colors.white),));
+                return Center(
+                  child: Text(
+                    'No messages yet.',
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.white 
+                          : Colors.black,
+                    ),
+                  ),
+                );
               }
 
               List<ChatModel> messages = snapshot.data!;
                     
                   return  ListView.builder(
                       reverse: true,
-                      padding: EdgeInsets.all(10),
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                       itemCount: messages.length,
                       itemBuilder: (context, index) {
                         final message = messages[index];
-                        final isMe = message.from == "u1";
-                        return _buildChatBubble(message.message, isMe,
-                            message.timestamp);
+                        final isMe = message.from == AuthService.getInstance.currentUser!.uid;
+                        return _buildChatBubble(message, isMe);
                       },
                     );
             }
@@ -62,26 +88,70 @@ class _ChatScreenState extends State<ChatScreen> {
                   _buildMessageInput(),
                 ],
               ),
-            );
+            ),
+          ],
+        ),
+    );
   }
 
-  Widget _buildChatBubble(String message, bool isMe, DateTime timestamp) {
+  Widget _buildChatBubble(ChatModel chatMessage, bool isMe) {
+    final DateTime timestamp = chatMessage.timestamp;
+    Widget? senderInfo;
+    if (widget.contact.isGroup && !isMe) {
+      // Find the user info from the contact's users list
+        UserInfoModel? sender = widget.contact.users.firstWhere(
+        (user) => user.id == chatMessage.from,  // You'll need to add 'from' field to your message data
+        orElse: () => UserInfoModel(id: '', name: 'Unknown User'),
+      );
+
+      senderInfo = Padding(
+        padding: EdgeInsets.only(bottom: 4.h),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (sender.profileImage != null)
+              CircleAvatar(
+                radius: 12.r,
+                backgroundImage: NetworkImage(sender.profileImage!),
+              ),
+            SizedBox(width: 8.w),
+            Text(
+              sender.name,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.87)
+                    : Colors.black.withOpacity(0.87),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5),
-        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+        margin: EdgeInsets.symmetric(vertical: 5.h),
+        padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.7,
+          maxHeight: chatMessage.isImage ? 200.h : double.infinity,
+        ),
         decoration: BoxDecoration(
-          color: isMe ? AppTheme.secondaryColor : Colors.white,
+          color: isMe 
+              ? AppTheme.secondaryColor 
+              : Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.white,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-            bottomLeft: isMe ? Radius.circular(20) : Radius.zero,
-            bottomRight: isMe ? Radius.zero : Radius.circular(20),
+            topLeft: const Radius.circular(20),
+            topRight: const Radius.circular(20),
+            bottomLeft: isMe ? const Radius.circular(20) : Radius.zero,
+            bottomRight: isMe ? Radius.zero : const Radius.circular(20),
           ),
-          boxShadow: [
+          boxShadow: const[
             BoxShadow(
               color: Colors.black12,
               blurRadius: 4,
@@ -90,19 +160,46 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            if (senderInfo != null) senderInfo,
+            if (chatMessage.isImage && chatMessage.imageUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                
+                child: CachedNetworkImage(
+                  imageUrl: chatMessage.imageUrl!,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                ),
+              )
+            else
+              Text(
+                chatMessage.message,
+                style: TextStyle(
+                  color: isMe 
+                      ? Colors.white 
+                      : Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withOpacity(0.87)
+                          : Colors.black.withOpacity(0.87),
+                  fontSize: 16
+                ),
+              ),
+            SizedBox(height: 5.h),
             Text(
-              message,
+              CommonUtils.formatDateTime(timestamp),
               style: TextStyle(
-                  color: isMe ? Colors.white : Colors.black87, fontSize: 16),
-            ),
-            SizedBox(height: 5),
-            Text(
-             CommonUtils.formatDateTime(timestamp),
-              style: TextStyle(
-                  color: isMe ? Colors.white70 : Colors.black54, fontSize: 12),
+                color: isMe 
+                    ? Colors.white.withOpacity(0.7)
+                    : Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.54)
+                        : Colors.black.withOpacity(0.54),
+                fontSize: 12
+              ),
             ),
           ],
         ),
@@ -112,9 +209,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildMessageInput() {
     return Padding(
-      padding: EdgeInsets.all(10.r),
+      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 10.h),
       child: Row(
         children: [
+          IconButton(
+            onPressed: () => _pickImage(ImageSource.gallery),
+            icon: Icon(Icons.photo_library),
+          ),
+          if (!kIsWeb)  // Only show camera button on mobile
+            IconButton(
+              onPressed: () => _pickImage(ImageSource.camera),
+              icon: Icon(Icons.camera_alt),
+            ),
           Expanded(
             child: TextField(
               onSubmitted: (String value) {
@@ -124,21 +230,18 @@ class _ChatScreenState extends State<ChatScreen> {
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium!
-                  .copyWith(color: Colors.black87),
+                  .copyWith(color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white 
+                      : Colors.black87),
               decoration: InputDecoration(
                 hintText: 'Type a message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
-                ),
-                fillColor: Colors.white,
-                filled: true,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                
+                contentPadding: 
+                    EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
               ),
             ),
           ),
-          SizedBox(width: 5),
+          SizedBox(width: 1.w),
           IconButton(
             onPressed: _sendMessage,
             icon: CircleAvatar(
@@ -155,11 +258,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
     await _provider!.sendMessage(
         ChatModel(
-            from: "u1",
-            to: ["u2", "u3"],
+            from: AuthService.getInstance.currentUser!.uid,
             message: _messageController.text.trim(),
+            isImage: false,
             timestamp: DateTime.now()),
-        "");
+        widget.contact.conversationId);
 
     setState(() {
       _messageController.clear();
@@ -168,5 +271,46 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _getTime() {
     return TimeOfDay.now().format(context);
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      if (kIsWeb) {
+        final pickedFile = await ImagePickerWeb.getImageAsBytes();
+        if (pickedFile != null) {
+          
+          setState(() {
+            _imageData = pickedFile;
+          });
+          // Handle sending image message
+          await _sendImageMessage(_imageData!);
+        }
+      } else {
+        final XFile? pickedFile = await _picker.pickImage(source: source);
+        if (pickedFile != null) {
+          final bytes = await pickedFile.readAsBytes();
+          setState(() {
+            _imageData = bytes;
+          });
+          // Handle sending image message
+          await _sendImageMessage(bytes);
+        }
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+  Future<void> _sendImageMessage(Uint8List imageData) async {
+
+    await _provider!.sendImageMessage(
+        ChatModel(
+            from: AuthService.getInstance.currentUser!.uid,
+            message: _messageController.text.trim(),
+            isImage: true,
+            timestamp: DateTime.now()),
+        widget.contact.conversationId,
+        imageData);
+
   }
 }

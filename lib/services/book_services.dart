@@ -19,8 +19,6 @@ class BookService {
     return _instance!;
   }
 
-
-
   Future<List<Book>> getResults(String query) async {
     final response = await client
         .get(Uri.parse("${ApiRoutePaths.bookUrl}/getSearchResults").replace(
@@ -38,7 +36,7 @@ class BookService {
     }
   }
 
-  Future<void> postBook(PostUserBook userBook) async {
+  Future<void> postBook(SavePost userBook) async {
     // Create a request
     var request = http.MultipartRequest(
         'POST', Uri.parse("${ApiRoutePaths.bookUrl}/saveProduct"));
@@ -46,22 +44,17 @@ class BookService {
     request.headers['Content-Type'] =
         'multipart/form-data; boundary=--------------------------592743729287522648443735';
 
-    print("********************************");
-    print(Uri.parse("${ApiRoutePaths.bookUrl}/saveProduct"));
     // Attach the JSON data as a field
     request.fields['data'] = jsonEncode(userBook.toJson());
 
-    print(request.fields);
-
     // Attach the image file if it exists
     if (userBook.postImage != null) {
-      print(" *******potimage not null *******");
       final imageData = userBook.postImage;
       request.files.add(
         http.MultipartFile.fromBytes(
             'file', // The field name expected by the server
             imageData!,
-            filename: 'images.xyz'),
+            filename: 'image.any'),
       );
     }
 

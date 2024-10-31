@@ -34,3 +34,4 @@ final List<PostCategory> postCategoryList = [
   PostCategory.barter,
   PostCategory.favourite,
 ];
+

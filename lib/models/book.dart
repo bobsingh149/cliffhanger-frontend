@@ -43,13 +43,13 @@ class Book {
   }
 }
 
-class PostUserBook extends Book {
+class SavePost extends Book {
   final String userId;
-  final String caption;
+  final String? caption;
   final PostCategory category;
   Uint8List? postImage;
 
-  PostUserBook({
+  SavePost({
     required super.title,
     required super.score,
     super.authors,
@@ -60,20 +60,6 @@ class PostUserBook extends Book {
     required this.category,
     this.postImage,
   });
-
-  factory PostUserBook.fromJson(Map<String, dynamic> json) {
-    return PostUserBook(
-      title: json['title'],
-      score: json['score'],
-      authors: List<String>.from(json['authors'] ?? []),
-      coverImages: List<String>.from(json['coverImages'] ?? []),
-      subjects: List<String>.from(json['subjects'] ?? []),
-      userId: json['userId'],
-      caption: json['caption'],
-      category: PostCategory.values.byName(json['category']),
-      postImage: json['imageByUser'],
-    );
-  }
 
   @override
   Map<String, dynamic> toJson() {
@@ -93,10 +79,14 @@ class PostUserBook extends Book {
 class UserBook extends Book {
   final String id;
   final String userId;
+  final String username;
   final String caption;
   final PostCategory category;
   final String? postImage;
   final DateTime createdAt;
+  int likesCount;
+  List<Comment> comments;
+  final String? description; // New optional description field
 
   UserBook({
     required this.id,
@@ -106,16 +96,19 @@ class UserBook extends Book {
     super.coverImages,
     super.subjects,
     required this.userId,
+    required this.username,
     required this.caption,
     required this.category,
     this.postImage,
     required this.createdAt,
+    required this.likesCount,
+    required this.comments,
+    this.description, // Added to the constructor
   });
 
-  /// Create a UserBook object from a JSON map.
+  /// Create a UserPost object from a JSON map.
   factory UserBook.fromJson(Map<String, dynamic> json) {
     json = json["data"];
-  
 
     return UserBook(
         id: json['id'] as String,
@@ -131,13 +124,20 @@ class UserBook extends Book {
             ?.map((e) => e as String)
             .toList(),
         userId: json['userId'] as String,
+        username: "Mansi", // json['username'] as String,
         caption: json['caption'] as String,
         category: stringToPostCategory(
             json['category'])!, // Convert category from string
         postImage: json['postImage'],
-        createdAt: DateTime.parse(json['createdAt']));
+        createdAt: DateTime.parse(json['createdAt']),
+        likesCount: 500, // json['likes'] as int,
+        comments: (json['comments'] as List<dynamic>)
+            .map((e) => Comment.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        description: json['description'] as String?); // Added to fromJson
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -147,11 +147,43 @@ class UserBook extends Book {
       'coverImages': coverImages,
       'subjects': subjects,
       'userId': userId,
+      'username': username,
       'caption': caption,
       'category':
           category.name, // Assuming PostCategory can be converted to a string
       'postImage': postImage,
-      'createdAt': createdAt.toString()
+      'createdAt': createdAt.toString(),
+      'likesCount': likesCount,
+      'comments': comments.map((comment) => comment.toJson()).toList(),
+      'description': description, // Added to toJson
+    };
+  }
+}
+
+class Comment {
+  final String userId;
+  final String username;
+  final String text;
+
+  Comment({
+    required this.userId,
+    required this.username,
+    required this.text,
+  });
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      userId: json['userId'] as String,
+      username: json['username'] as String,
+      text: json['text'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'username': username,
+      'text': text,
     };
   }
 }
