@@ -1,6 +1,6 @@
 import 'package:barter_frontend/main.dart';
 import 'package:barter_frontend/models/post.dart';
-import 'package:barter_frontend/models/book_category.dart';
+import 'package:barter_frontend/models/post_category.dart';
 import 'package:barter_frontend/provider/post_provider.dart';
 import 'package:barter_frontend/screens/edit_profile.dart';
 import 'package:barter_frontend/screens/home_page.dart';
@@ -34,7 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
     super.didChangeDependencies();
     if (isInit) {
       provider = Provider.of<PostProvider>(context, listen: false);
-      _userPostsFuture = provider!.getUserMockPosts(widget.userId);
+      _userPostsFuture = provider!.getUserPosts(widget.userId);
       isInit = false;
     }
   }
@@ -122,7 +122,7 @@ class _ProfilePageState extends State<ProfilePage> {
         body: RefreshIndicator(
           onRefresh: () async {
             setState(() {
-              _userPostsFuture = provider!.getUserMockPosts(widget.userId);
+              _userPostsFuture = provider!.getUserPosts(widget.userId);
             });
           },
           child: FutureBuilder<Map<PostCategory, List<PostModel>>?>(

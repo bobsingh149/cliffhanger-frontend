@@ -1,5 +1,5 @@
 import 'package:barter_frontend/models/post.dart';
-import 'package:barter_frontend/models/book_category.dart';
+import 'package:barter_frontend/models/post_category.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:barter_frontend/widgets/book_details_dialog.dart';
