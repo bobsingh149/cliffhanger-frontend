@@ -8,6 +8,8 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:barter_frontend/provider/post_provider.dart';
 
 class PostCard extends StatelessWidget {
   final PostModel post;
@@ -43,7 +45,7 @@ class PostCard extends StatelessWidget {
                   ),
                   SizedBox(width: 12.w),
                   Text(
-                    post.userId,
+                    post.userInfo.name,
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge
@@ -144,7 +146,8 @@ class PostCard extends StatelessWidget {
                           TextButton(
                             onPressed: () => _showCommentsDialog(context, post),
                             child: Text(
-                                'View ${post.comments.length} ${post.comments.length == 1 ? 'comment' : 'comments'}'),
+                              'View ${post.commentCount} ${post.commentCount == 1 ? 'comment' : 'comments'}'
+                            ),
                           ),
                         ],
                       ),
@@ -205,13 +208,26 @@ class PostCard extends StatelessWidget {
                   ],
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    controller: controller,
-                    itemCount: post.comments.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(post.comments[index].username),
-                        subtitle: Text(post.comments[index].text),
+                  child: FutureBuilder<List<Comment>>(
+                    future: Provider.of<PostProvider>(context, listen: false)
+                        .getPostComments(post.id),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error loading comments'));
+                      }
+                      final comments = snapshot.data ?? [];
+                      return ListView.builder(
+                        controller: controller,
+                        itemCount: comments.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(comments[index].userInfo.name),
+                            subtitle: Text(comments[index].text),
+                          );
+                        },
                       );
                     },
                   ),

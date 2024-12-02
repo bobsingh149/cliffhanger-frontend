@@ -1,13 +1,14 @@
 import 'package:barter_frontend/models/post.dart';
+import 'package:barter_frontend/provider/post_provider.dart';
 import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:barter_frontend/widgets/book_details_dialog.dart';
+import 'package:provider/provider.dart';
 
 class UserPost extends StatelessWidget {
   final PostModel userBook;
@@ -146,13 +147,26 @@ class PostDetailsDialog extends StatelessWidget {
                   ],
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    controller: controller,
-                    itemCount: post.comments.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(post.comments[index].username),
-                        subtitle: Text(post.comments[index].text),
+                  child: FutureBuilder<List<Comment>>(
+                    future: Provider.of<PostProvider>(context, listen: false)
+                        .getPostComments(post.id),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error loading comments'));
+                      }
+                      final comments = snapshot.data ?? [];
+                      return ListView.builder(
+                        controller: controller,
+                        itemCount: comments.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(comments[index].userInfo.name),
+                            subtitle: Text(comments[index].text),
+                          );
+                        },
                       );
                     },
                   ),
@@ -303,7 +317,7 @@ class PostDetailsDialog extends StatelessWidget {
                             SizedBox(width: 20.w),
                             _buildInteractionButton(
                               icon: FontAwesomeIcons.comment,
-                              label: '${userBook.comments.length}',
+                              label: '${userBook.commentCount}',
                               onTap: () => _showCommentsDialog(context, userBook),
                               theme: theme,
                             ),

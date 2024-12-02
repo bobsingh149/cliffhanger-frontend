@@ -194,4 +194,17 @@ class PostService {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
+
+  Future<List<Comment>> getComments(String postId) async {
+    final response = await client.get(
+      Uri.parse('${ApiRoutePaths.bookUrl}${ApiRoutePaths.getComments}/$postId'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> commentsJson =ServiceUtils.parseResponse(response);
+      return commentsJson.map((json) => Comment.fromJson(json)).toList();
+    } else {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
+    }
+  }
 }

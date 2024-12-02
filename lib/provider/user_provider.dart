@@ -14,7 +14,8 @@ import 'package:barter_frontend/services/user_services.dart';
 import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_picker_web/image_picker_web.dart' if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
+import 'package:image_picker_web/image_picker_web.dart'
+    if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
 import 'package:flutter/foundation.dart';
 
 class UserProvider with ChangeNotifier {
@@ -31,7 +32,6 @@ class UserProvider with ChangeNotifier {
   UserSetupModel? get user => _user; // Getter for user
 
   List<ContactModel>? get contacts => _contacts;
-
 
   // Method to fetch user data from the API
   Future<UserModel?> fetchUser(String userId) async {
@@ -151,22 +151,23 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<List<ContactModel>> getConnections() async {
-    if(_contacts!=null){
+    if (_contacts != null) {
       return _contacts!;
     }
-    
+
     if (_user == null) {
       await getUserSetup(AuthService.getInstance.currentUser!.uid);
     }
     List<ConversationModel> conversationModels = _user?.conversations ?? [];
-    
+
     // Get latest messages for all conversations
-    Map<String, ChatModel> latestMessages = await ChatService.getInstance.getLatestMessages();
-    
+    Map<String, ChatModel> latestMessages =
+        await ChatService.getInstance.getLatestMessages();
+
     List<ContactModel> connections = conversationModels.map((conversation) {
       // Get the latest message for this conversation
       ChatModel? latestChat = latestMessages[conversation.conversationId];
-      
+
       return ContactModel(
         conversationId: conversation.conversationId,
         isGroup: conversation.isGroup,
@@ -177,95 +178,16 @@ class UserProvider with ChangeNotifier {
         groupImage: conversation.groupImage,
       );
     }).toList();
-    
+
     return _contacts = connections;
   }
 
   // Optionally, you can have a method to clear user data
   void clearUser() {
     _user = null;
-    _contacts=null;
+    _contacts = null;
 
     notifyListeners();
-  }
-
-  Future<List<RequestModel>> getMockRequests() async {
-    return [
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user1',
-          name: 'Alice Smith',
-          profileImage: 'https://picsum.photos/200?random=1',
-          // Add other required UserModel fields
-        ),
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user2',
-          name: 'Bob Johnson',
-          profileImage: 'https://picsum.photos/200?random=2',
-          // Add other required UserModel fields
-        ),
-        timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-      ),
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user3',
-          name: 'Emma Davis',
-          profileImage: 'https://picsum.photos/200?random=3',
-        ),
-        timestamp: DateTime.now().subtract(const Duration(hours: 8)),
-      ),
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user4',
-          name: 'Michael Wilson',
-          profileImage: 'https://picsum.photos/200?random=4',
-        ),
-        timestamp: DateTime.now().subtract(const Duration(hours: 12)),
-      ),
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user5',
-          name: 'Sophia Brown',
-          profileImage: 'https://picsum.photos/200?random=5',
-        ),
-        timestamp: DateTime.now().subtract(const Duration(hours: 16)),
-      ),
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user6',
-          name: 'James Taylor',
-          profileImage: 'https://picsum.photos/200?random=6',
-        ),
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user7',
-          name: 'Olivia Martinez',
-          profileImage: 'https://picsum.photos/200?random=7',
-        ),
-        timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 4)),
-      ),
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user8',
-          name: 'William Anderson',
-          profileImage: 'https://picsum.photos/200?random=8',
-        ),
-        timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 8)),
-      ),
-      RequestModel(
-        userResponse: UserModel(
-          id: 'user9',
-          name: 'Isabella Thomas',
-          profileImage: 'https://picsum.photos/200?random=9',
-        ),
-        timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 12)),
-      ),
-    ];
   }
 
   Future<void> pickGroupImage(ImageSource source) async {
@@ -298,7 +220,7 @@ class UserProvider with ChangeNotifier {
   }) async {
     isLoading = true;
     notifyListeners();
-    
+
     try {
       await _userService.createGroup(
         name: name,

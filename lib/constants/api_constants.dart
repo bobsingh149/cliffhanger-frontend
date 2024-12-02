@@ -17,6 +17,7 @@ class ApiRoutePaths {
   static const String saveRequest = '/saveRequest';
   static const String removeRequest = '/removeRequest';
   static const String deleteUser = '/deleteUserById';
+  static const String getComments = '/getComments';
 }
 
 class ApiHeaders {

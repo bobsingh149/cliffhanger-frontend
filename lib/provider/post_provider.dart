@@ -102,6 +102,13 @@ class PostProvider with ChangeNotifier {
     }
   }
 
-  
-  
+  Future<List<Comment>> getPostComments(String postId) async {
+    try {
+      final comments = await _postService.getComments(postId);
+      return comments;
+    } catch (err) {
+      _logger.e(err);
+      rethrow;
+    }
+  }
 }

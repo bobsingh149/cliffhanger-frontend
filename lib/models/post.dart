@@ -95,7 +95,6 @@ class PostModel extends Book {
   final List<String> likes;
   final int likesCount;
   final int commentCount;
-  List<Comment> comments;
   final String? description;
 
   PostModel({
@@ -113,7 +112,6 @@ class PostModel extends Book {
     required this.likes,
     required this.likesCount,
     required this.commentCount,
-    required this.comments,
     this.description,
   });
 
@@ -133,9 +131,6 @@ class PostModel extends Book {
       likes: (json['likes'] as List<dynamic>).map((e) => e as String).toList(),
       likesCount: json['likeCount'] as int,
       commentCount: json['commentCount'] as int,
-      comments: (json['comments'] as List<dynamic>)
-          .map((e) => Comment.fromJson(e as Map<String, dynamic>))
-          .toList(),
       description: json['description'] as String?,
     );
   }
@@ -157,7 +152,6 @@ class PostModel extends Book {
       'likes': likes,
       'likeCount': likesCount,
       'commentCount': commentCount,
-      'comments': comments.map((comment) => comment.toJson()).toList(),
       'description': description,
     };
   }

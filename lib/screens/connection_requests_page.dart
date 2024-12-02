@@ -47,7 +47,7 @@ class ConnectionRequestsPage extends StatelessWidget {
               ),
               child: FutureBuilder<List<RequestModel>>(
                 future: Provider.of<UserProvider>(context, listen: false)
-                    .getMockRequests(),
+                    .getRequests(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CommonWidget.getLoader();
