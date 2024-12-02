@@ -7,4 +7,8 @@ class ServiceUtils {
     return jsonDecode(response.body)["errorMessage"];
   }
 
+  static parseResponse(Response response) {
+    return jsonDecode(response.body)["data"];
+  }
+
 }

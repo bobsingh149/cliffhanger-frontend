@@ -9,11 +9,11 @@ extension CategoryExtension on PostCategory {
   String get displayName {
     switch (this) {
       case PostCategory.currentlyReading:
-        return 'Currently Reading';
+        return 'Reading now';
       case PostCategory.barter:
         return 'Barter';
       case PostCategory.favourite:
-        return 'Favourite Book';
+        return 'Favourites';
       default:
         return '';
     }

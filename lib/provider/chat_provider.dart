@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 
 class ChatProvider with ChangeNotifier {
   final AppLogger _logger = AppLogger.instance;
-  bool isLoading = false;
   final ChatService _chatService;
 
   ChatProvider({ChatService? chatService})

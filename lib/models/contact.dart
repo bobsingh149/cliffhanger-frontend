@@ -1,9 +1,9 @@
-import 'user_info.dart';
+import 'user.dart';
 
 class ContactModel {
   final String conversationId;
   final bool isGroup;
-  final List<UserInfoModel> users;
+  final List<UserModel> users;
   final String? lastMessage;
   final DateTime? lastMessageTime;
   final String? groupName;
@@ -24,7 +24,7 @@ class ContactModel {
       conversationId: json['id'],
       isGroup: json['isGroup'] ?? false,
       users: (json['users'] as List?)
-              ?.map((user) => UserInfoModel.fromJson(user))
+              ?.map((user) => UserModel.fromJson(user))
               .toList() ??
           [],
       lastMessage: json['lastMessage'],
@@ -60,5 +60,34 @@ class ContactModel {
       return groupImage;
     }
     return users.isNotEmpty ? users[0].profileImage : null;
+  }
+}
+
+class ConversationInputModel {
+  final String? conversationId;
+  final bool isGroup;
+  final List<String> members;
+  final String userId;
+  final String? groupName;
+  final String? groupImage;
+
+  ConversationInputModel({
+    this.conversationId,
+    required this.isGroup,
+    required this.members,
+    required this.userId,
+    this.groupName,
+    this.groupImage,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'conversationId': conversationId,
+      'isGroup': isGroup,
+      'members': members,
+      'userId': userId,
+      'groupName': groupName,
+      'groupImage': groupImage,
+    };
   }
 }

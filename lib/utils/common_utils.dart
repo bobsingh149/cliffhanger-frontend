@@ -1,6 +1,8 @@
+import 'package:barter_frontend/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
 
 enum SnackbarMode {
   success,
@@ -41,44 +43,84 @@ class CommonUtils {
     }
   }
 
+  static String formatTime(DateTime dateTime) {
+    return DateFormat('HH:mm').format(dateTime);
+  }
+
   static void displaySnackbar(
-      {required BuildContext context,required String message, SnackbarMode mode=SnackbarMode.error}) {
+      {required BuildContext context,
+      required String message,
+      SnackbarMode mode = SnackbarMode.error}) {
     Color backgroundColor;
     Color borderColor;
     Color textColor;
 
     switch (mode) {
       case SnackbarMode.success:
-        backgroundColor = Colors.lightGreen.withOpacity(0.23);
-        borderColor = Colors.green.shade700;
-        textColor = Colors.green.shade800;
+        backgroundColor = Colors.lightGreen;
+        borderColor = Colors.white;
+        textColor = Colors.white;
         break;
       case SnackbarMode.error:
-        backgroundColor = Colors.red.withOpacity(0.23);
-        borderColor = Colors.red.shade700;
-        textColor = Colors.red.shade800;
+        backgroundColor = AppTheme.secondaryColor;
+        borderColor = Colors.white;
+        textColor = Colors.white;
         break;
       case SnackbarMode.info:
-        backgroundColor = Colors.blue.withOpacity(0.23);
-        borderColor = Colors.blue.shade700;
-        textColor = Colors.blue.shade800;
+        backgroundColor = Colors.blue;
+        borderColor = Colors.white;
+        textColor = Colors.white;
         break;
     }
 
     final snackBar = SnackBar(
-      content: Text(
-        message,
-        style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+      content: Row(
+        children: [
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, color: textColor, size: 20),
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+        ],
       ),
+      width: kIsWeb ? 300 : null,
       backgroundColor: backgroundColor,
-      behavior: SnackBarBehavior.floating,
+      behavior: kIsWeb ? SnackBarBehavior.floating : SnackBarBehavior.fixed,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: borderColor, width: 1),
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(kIsWeb ? 5 : 7),
       ),
-      margin: EdgeInsets.all(10.r), // Add margin to float the snackbar
+      duration: const Duration(seconds: 4),
+      elevation: kIsWeb ? 6 : 0,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  static String formatDateOnly(DateTime date) {
+    DateTime now = DateTime.now();
+    DateTime yesterday = now.subtract(const Duration(days: 1));
+
+    if (date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day) {
+      return 'Today';
+    } else if (date.year == yesterday.year &&
+        date.month == yesterday.month &&
+        date.day == yesterday.day) {
+      return 'Yesterday';
+    } else {
+      return DateFormat('MMMM d, y').format(date);
+    }
   }
 }

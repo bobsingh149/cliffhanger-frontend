@@ -11,14 +11,27 @@ class AppTheme {
       Color.fromARGB(133, 139, 69, 19); // wooden brown
   static const Color errorColor = Color(0xFFB00020);
   static const Color backgroundColorLight = Color(0xFFF3F4F6);
+  static Color backgroundColorGrey = Colors.grey[300]!;
   static const Color backgroundColorDark = Color(0xFF1C1C1E);
-  static const Color surfaceColorLight = Colors.white;
+  static const Color surfaceColorLight = Color(0xFFFAFAFA); // Slightly off-white
   static const Color surfaceColorDark = Color(0xFF2C2C2E);
   static const Color textColorLight = Color(0xFF212121);
-  static const Color textColorDark = Colors.white;
+  static const Color textColorDark = Color(0xFFE1E1E1); // Slightly off-white for better readability
 
-
-  
+  static BoxDecoration containerDecoration(bool isDark) {
+    return BoxDecoration(
+      color: isDark ? surfaceColorDark : surfaceColorLight,
+      borderRadius: BorderRadius.circular(10),
+      boxShadow: [
+        BoxShadow(
+          color: isDark ? Colors.black26 : Colors.grey.withOpacity(0.2),
+          spreadRadius: 1,
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );
+  }
 
   static ThemeData getAppropriateDarkTheme() {
     if (kIsWeb) {
@@ -54,31 +67,29 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: backgroundColorLight,
       appBarTheme: AppBarTheme(
-        elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: primaryColor,
         centerTitle: true,
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: primaryColor,
         ),
       ),
       textTheme: _buildTextTheme(textColorLight),
       cardTheme: CardTheme(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColorLight,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 15.h),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          backgroundColor: primaryColor.withOpacity(0.7),
+          backgroundColor: primaryColor,
           foregroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -98,7 +109,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: Colors.grey[200],
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -151,6 +162,9 @@ class AppTheme {
           return Colors.grey.withOpacity(0.5);
         }),
       ),
+      extensions: [
+        ContainerTheme(decoration: containerDecoration(false)),
+      ],
     );
   }
 
@@ -172,31 +186,30 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: backgroundColorDark,
       appBarTheme: AppBarTheme(
-        elevation: 0,
         backgroundColor: surfaceColorDark,
         foregroundColor: primaryColor,
         centerTitle: true,
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: primaryColor,
         ),
       ),
       textTheme: _buildTextTheme(textColorDark),
       cardTheme: CardTheme(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColorDark,
+        shadowColor: Colors.grey.shade600,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 15.h),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           backgroundColor: primaryColor.withOpacity(0.7),
           foregroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -269,6 +282,9 @@ class AppTheme {
           return Colors.grey.withOpacity(0.5);
         }),
       ),
+      extensions: [
+        ContainerTheme(decoration: containerDecoration(true)),
+      ],
     );
   }
 
@@ -290,35 +306,33 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: backgroundColorLight,
       appBarTheme: AppBarTheme(
-        elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: primaryColor,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: primaryColor,
         ),
       ),
       textTheme: _buildTextTheme(textColorLight),
       cardTheme: CardTheme(
         elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColorLight,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          backgroundColor: primaryColor.withOpacity(0.7),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          backgroundColor: primaryColor,
           foregroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+          padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 12.h),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           side: BorderSide(color: primaryColor, width: 2),
@@ -333,7 +347,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: Colors.grey[200],
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -386,6 +400,9 @@ class AppTheme {
           return Colors.grey.withOpacity(0.5);
         }),
       ),
+      extensions: [
+        ContainerTheme(decoration: containerDecoration(false)),
+      ],
     );
   }
 
@@ -407,35 +424,34 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: backgroundColorDark,
       appBarTheme: AppBarTheme(
-        elevation: 0,
         backgroundColor: surfaceColorDark,
         foregroundColor: primaryColor,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: primaryColor,
         ),
       ),
       textTheme: _buildTextTheme(textColorDark),
       cardTheme: CardTheme(
         elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColorDark,
+        shadowColor: Colors.grey.shade600,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           backgroundColor: primaryColor.withOpacity(0.7),
           foregroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+          padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 12.h),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           side: BorderSide(color: primaryColor, width: 2),
@@ -503,6 +519,9 @@ class AppTheme {
           return Colors.grey.withOpacity(0.5);
         }),
       ),
+      extensions: [
+        ContainerTheme(decoration: containerDecoration(true)),
+      ],
     );
   }
 
@@ -529,6 +548,31 @@ class AppTheme {
           fontSize: 10,
           fontWeight: FontWeight.w500,
           color: textColor.withOpacity(0.81)),
+    );
+  }
+}
+
+class ContainerTheme extends ThemeExtension<ContainerTheme> {
+  final BoxDecoration decoration;
+
+  ContainerTheme({required this.decoration});
+
+  @override
+  ThemeExtension<ContainerTheme> copyWith({BoxDecoration? decoration}) {
+    return ContainerTheme(
+      decoration: decoration ?? this.decoration,
+    );
+  }
+
+  @override
+  ThemeExtension<ContainerTheme> lerp(
+      ThemeExtension<ContainerTheme>? other, double t) {
+    if (other is! ContainerTheme) {
+      return this;
+    }
+    return ContainerTheme(
+      decoration: BoxDecoration.lerp(decoration, other.decoration, t) ??
+          decoration,
     );
   }
 }

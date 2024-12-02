@@ -76,10 +76,17 @@ class SavePost extends Book {
   }
 }
 
-class UserBook extends Book {
+enum FilterType{
+  all,
+  barter,
+  search,
+  userPosts,
+  connectionsPosts,
+}
+
+class PostModel extends Book {
   final String id;
   final String userId;
-  final String username;
   final String caption;
   final PostCategory category;
   final String? postImage;
@@ -88,7 +95,7 @@ class UserBook extends Book {
   List<Comment> comments;
   final String? description; // New optional description field
 
-  UserBook({
+  PostModel({
     required this.id,
     required super.title,
     required super.score,
@@ -96,7 +103,6 @@ class UserBook extends Book {
     super.coverImages,
     super.subjects,
     required this.userId,
-    required this.username,
     required this.caption,
     required this.category,
     this.postImage,
@@ -107,10 +113,9 @@ class UserBook extends Book {
   });
 
   /// Create a UserPost object from a JSON map.
-  factory UserBook.fromJson(Map<String, dynamic> json) {
-    json = json["data"];
+  factory PostModel.fromJson(Map<String, dynamic> json) {
 
-    return UserBook(
+    return PostModel(
         id: json['id'] as String,
         title: json['title'] as String,
         score: json['score'] as int,
@@ -124,7 +129,6 @@ class UserBook extends Book {
             ?.map((e) => e as String)
             .toList(),
         userId: json['userId'] as String,
-        username: "Mansi", // json['username'] as String,
         caption: json['caption'] as String,
         category: stringToPostCategory(
             json['category'])!, // Convert category from string
@@ -147,7 +151,6 @@ class UserBook extends Book {
       'coverImages': coverImages,
       'subjects': subjects,
       'userId': userId,
-      'username': username,
       'caption': caption,
       'category':
           category.name, // Assuming PostCategory can be converted to a string
@@ -161,29 +164,39 @@ class UserBook extends Book {
 }
 
 class Comment {
-  final String userId;
-  final String username;
   final String text;
+  final String userId;
+  final DateTime timestamp;
+  final int likeCount;
+  final String username;
 
   Comment({
-    required this.userId,
-    required this.username,
     required this.text,
+    required this.userId,
+    required this.timestamp,
+    required this.likeCount,
+    required this.username,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
     return Comment(
-      userId: json['userId'] as String,
-      username: json['username'] as String,
       text: json['text'] as String,
+      userId: json['userId'] as String,
+      timestamp: DateTime.parse(json['timestamp']),
+      likeCount: json['likeCount'] as int,
+      username: json['username'] as String,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'userId': userId,
-      'username': username,
       'text': text,
+      'userId': userId,
+      'timestamp': timestamp.toIso8601String(),
+      'likeCount': likeCount,
+      'username': username,
     };
   }
 }
+
+

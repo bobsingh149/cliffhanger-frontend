@@ -48,7 +48,6 @@ class AuthService {
   // Google Sign In
   Future<UserCredential?> signInWithGoogle() async {
     try {
-
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw Exception('Google sign-in was canceled');
@@ -65,6 +64,19 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception('Google sign-in failed: ${e.message}');
+    }
+  }
+
+  // Anonymous Sign In
+  Future<User?> signInWithDemoAccount() async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: 'mansi@gmail.com',
+        password: '123456',
+      );
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Sign in failed: ${e.message}');
     }
   }
 

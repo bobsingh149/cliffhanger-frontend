@@ -60,7 +60,7 @@ class ChatService {
         'POST', Uri.parse("${ApiRoutePaths.chatUrl}/uploadImage"));
 
     request.headers['Content-Type'] =
-        'multipart/form-data; boundary=--------------------------592743729287522648443735';
+        'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW';
     
       request.files.add(
         http.MultipartFile.fromBytes(
@@ -80,11 +80,42 @@ class ChatService {
       throw Exception(ServiceUtils.parseErrorMessage(responseBody));
     }
       
-      return responseBody.body;
-    
+    return ServiceUtils.parseResponse(responseBody);
   }
 
+  Future<Map<String, ChatModel>> getLatestMessages() async {
+    Map<String, ChatModel> chatMessages = {};
+    
+    try {
+      // Get all chat documents
+      QuerySnapshot chatSnapshot = await _firestore.collection('chats').get();
+      
+      // For each chat document
+      for (var chatDoc in chatSnapshot.docs) {
+        String chatId = chatDoc.id;
+        
+        // Get the latest message
+        QuerySnapshot messageSnapshot = await _firestore
+            .collection('chats')
+            .doc(chatId)
+            .collection('messages')
+            .orderBy('timestamp', descending: true)
+            .limit(1)
+            .get();
 
-  
+        if (messageSnapshot.docs.isNotEmpty) {
+          ChatModel latestMessage = ChatModel.fromJson(
+              messageSnapshot.docs.first.data() as Map<String, dynamic>);
+          // Store the entire ChatModel object instead of just the message text
+          chatMessages[chatId] = latestMessage;
+        }
+      }
+      
+      return chatMessages;
+    } catch (e) {
+      print('Error getting latest messages: $e');
+      return {};
+    }
+  }
 
 }

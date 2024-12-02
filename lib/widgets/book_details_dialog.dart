@@ -1,84 +1,140 @@
-import 'package:barter_frontend/models/book.dart';
+import 'package:barter_frontend/models/post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:expandable/expandable.dart';
 
 class BookDetailsDialog extends StatelessWidget {
-  final UserBook userBook;
+  final PostModel userBook;
 
   const BookDetailsDialog({Key? key, required this.userBook}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(16.r),
+    Widget dialogContent = Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: 0.9.sh,
+        ),
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Cover Image
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8.r),
-                child: CachedNetworkImage(
-                  imageUrl: userBook.coverImages?.isNotEmpty == true ? userBook.coverImages![0] : '',
-                  height: 350.h,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                  errorWidget: (context, url, error) => Icon(Icons.error),
-                ),
+              // Hero Image Section with Gradient Overlay
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                    child: CachedNetworkImage(
+                      imageUrl: userBook.coverImages?.isNotEmpty == true
+                          ? userBook.coverImages![0]
+                          : '',
+                      height: 350.h,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Center(
+                        child: CircularProgressIndicator(
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Icon(Icons.error),
+                    ),
+                  ),
+                  // Gradient overlay
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 150.h,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Close button overlay
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 16.h),
-              // Title
-              Text(
-                userBook.title,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              SizedBox(height: 8.h),
-              // Author
-              Text(
-                'by ${userBook.authors?.join(', ') ?? 'Unknown'}',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
-              SizedBox(height: 16.h),
-              // Description
-              Text(
-                'Description',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              SizedBox(height: 8.h),
-              ExpandablePanel(
-                header: Container(),
-                collapsed: ExpandableText(
-                  userBook.description ?? 'No description available',
-                  expandText: 'Show more',
-                  maxLines: 3,
-                  linkColor: Theme.of(context).primaryColor,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                expanded: Text(
-                  userBook.description ?? 'No description available',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                theme: const ExpandableThemeData(
-                  headerAlignment: ExpandablePanelHeaderAlignment.center,
-                  tapBodyToExpand: true,
-                  tapBodyToCollapse: true,
-                ),
-              ),
-              SizedBox(height: 16.h),
-              // Close button
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Close'),
+              
+              Padding(
+                padding: EdgeInsets.all(24.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title with enhanced style
+                    Text(
+                      userBook.title,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    // Author with enhanced style
+                    Text(
+                      'by ${userBook.authors?.join(', ') ?? 'Unknown'}',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    // Description section
+                    Text(
+                      'Description',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    ExpandablePanel(
+                      header: Container(),
+                      collapsed: ExpandableText(
+                        userBook.description ?? 'No description available',
+                        expandText: 'Read more',
+                        maxLines: 4,
+                        linkColor: Theme.of(context).primaryColor,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          height: 1.5,
+                        ),
+                      ),
+                      expanded: Text(
+                        userBook.description ?? 'No description available',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          height: 1.5,
+                        ),
+                      ),
+                      theme: const ExpandableThemeData(
+                        headerAlignment: ExpandablePanelHeaderAlignment.center,
+                        tapBodyToExpand: true,
+                        tapBodyToCollapse: true,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -86,6 +142,18 @@ class BookDetailsDialog extends StatelessWidget {
         ),
       ),
     );
+
+    // Add max width constraint for web platform
+    return kIsWeb 
+        ? Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 390.w,
+              ),
+              child: dialogContent,
+            ),
+          )
+        : dialogContent;
   }
 }
 
@@ -140,7 +208,8 @@ class _ExpandableTextState extends State<ExpandableText> {
               Text(
                 widget.text,
                 maxLines: _expanded ? null : widget.maxLines,
-                overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                overflow:
+                    _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
                 style: widget.style ?? Theme.of(context).textTheme.bodyMedium,
               ),
               InkWell(
@@ -154,15 +223,16 @@ class _ExpandableTextState extends State<ExpandableText> {
                   child: Text(
                     _expanded ? 'Show less' : widget.expandText,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: widget.linkColor,
-                    ),
+                          color: widget.linkColor,
+                        ),
                   ),
                 ),
               ),
             ],
           );
         } else {
-          return Text(widget.text, style: widget.style ?? Theme.of(context).textTheme.bodyMedium);
+          return Text(widget.text,
+              style: widget.style ?? Theme.of(context).textTheme.bodyMedium);
         }
       },
     );

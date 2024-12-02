@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:barter_frontend/models/book.dart';
+import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/provider/book_provider.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +86,7 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                   constraints: BoxConstraints(minHeight: 230.h, maxHeight: 230.h),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(10.r),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: isLoading
                       ? CommonWidget.getLoader()
@@ -103,14 +103,14 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                                   padding: EdgeInsets.symmetric(vertical: 10.h),
                                   child: ListTile(
                                     leading: ClipRRect(
-                                      borderRadius: BorderRadius.circular(7.r),
+                                      borderRadius: BorderRadius.circular(7),
                                       child: CachedNetworkImage(
                                         imageUrl: widget.provider.searchResults[index].coverImages![0],
                                         width: 50.w,
                                         height: 50.h,
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) => CircularProgressIndicator(),
-                                        errorWidget: (context, url, error) => FaIcon(FontAwesomeIcons.bookOpen, size: 50.r),
+                                        errorWidget: (context, url, error) => FaIcon(FontAwesomeIcons.bookOpen, size: 50),
                                       ),
                                     ),
                                     title: Text(widget.provider.searchResults[index].title),
@@ -143,19 +143,25 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
         GestureDetector(
           key: _textFieldKey,
           child: SizedBox(
-            height: widget.isHomePage ? 35.h : 50.h,
+            height: widget.isHomePage ? 36.h : 50.h,
             child: TextField(
               controller: _controller,
               decoration: InputDecoration(
                 prefixIcon: _selectedBook == null
                     ? Padding(
-                        padding: EdgeInsets.only(left: 10.w, top: 5.h),
-                        child: FaIcon(FontAwesomeIcons.searchengin),
+                        padding: EdgeInsets.only(
+                          left: 10.w, 
+                          top: widget.isHomePage ? 5.w : 7.h
+                        ),
+                        child: FaIcon(FontAwesomeIcons.magnifyingGlass),
                       )
                     : null,
                 hintText: 'Search your book ...',
+                contentPadding: widget.isHomePage 
+                    ? EdgeInsets.only(top: 5.h)
+                    : EdgeInsets.zero,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               onChanged: (value) {

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:barter_frontend/constants/constant_data.dart';
-import 'package:barter_frontend/models/book.dart';
+import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/provider/book_provider.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:flutter/material.dart';
@@ -99,7 +99,7 @@ class _StaticSearchbarState extends State<StaticSearchbar> {
                   constraints: BoxConstraints(minHeight: 230.h, maxHeight: 230.h),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(10.r),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
@@ -148,12 +148,12 @@ class _StaticSearchbarState extends State<StaticSearchbar> {
             focusNode: widget.focusNode,
             decoration: InputDecoration(
               prefixIcon: Padding(
-                padding: EdgeInsets.only(left: 10.w, top: 5.h),
-                child: const FaIcon(FontAwesomeIcons.searchengin),
+                padding: EdgeInsets.only(left: 10.w, top: 7.h),
+                child: const FaIcon(FontAwesomeIcons.magnifyingGlass),
               ),
               hintText: 'Search your city ...',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.r),
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
             onChanged: (value) {

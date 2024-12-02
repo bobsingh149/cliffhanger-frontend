@@ -1,6 +1,6 @@
 import 'package:barter_frontend/models/chat.dart';
 import 'package:barter_frontend/models/contact.dart';
-import 'package:barter_frontend/models/user_info.dart';
+import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/provider/chat_provider.dart';
 import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
@@ -12,7 +12,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
-import 'package:image_picker_web/image_picker_web.dart';
+import 'package:image_picker_web/image_picker_web.dart'
+    if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
 
 class ChatScreen extends StatefulWidget {
   static const routePath = '/chat';
@@ -21,7 +22,6 @@ class ChatScreen extends StatefulWidget {
   const ChatScreen({
     Key? key,
     required this.contact,
-  
   }) : super(key: key);
 
   @override
@@ -29,7 +29,6 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  
   ChatProvider? _provider;
   final TextEditingController _messageController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
@@ -39,59 +38,71 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     _provider = Provider.of<ChatProvider>(context);
     return Scaffold(
-        body: Column(
-          children: [
-            AppBar(
-              title: Text(widget.contact.getDisplayName()),
-              centerTitle: true,
-              elevation: 0,
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: StreamBuilder<List<ChatModel>>(
-            stream: _provider!.getMessages(""),
-            builder: (context, snapshot) {
-              // if (snapshot.connectionState == ConnectionState.waiting) {
-              // }
-
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No messages yet.',
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark 
-                          ? Colors.white 
-                          : Colors.black,
-                    ),
-                  ),
-                );
-              }
-
-              List<ChatModel> messages = snapshot.data!;
-                    
-                  return  ListView.builder(
-                      reverse: true,
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final isMe = message.from == AuthService.getInstance.currentUser!.uid;
-                        return _buildChatBubble(message, isMe);
-                      },
-                    );
-            }
-                    )
-
-                  ),
-                  _buildMessageInput(),
-                ],
+        backgroundColor: Theme.of(context).brightness == Brightness.light
+            ? AppTheme
+                .backgroundColorGrey // Light grey background for light mode
+            : null, // Keep default dark mode background
+        body: SafeArea(
+          child: Column(
+            children: [
+              AppBar(
+                title: Text(widget.contact.getDisplayName()),
+                centerTitle: true,
               ),
-            ),
-          ],
-        ),
-    );
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                        child: StreamBuilder<List<ChatModel>>(
+                            stream: _provider!.getMessages(""),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
+
+                              List<ChatModel> messages = snapshot.data!;
+                              // Group messages by date
+                              Map<String, List<ChatModel>> groupedMessages = {};
+
+                              for (var message in messages) {
+                                String dateKey = CommonUtils.formatDateOnly(
+                                    message.timestamp);
+                                groupedMessages.putIfAbsent(dateKey, () => []);
+                                groupedMessages[dateKey]!.add(message);
+                              }
+
+                              return ListView.builder(
+                                reverse: true,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10.w, vertical: 10.h),
+                                itemCount: groupedMessages.length,
+                                itemBuilder: (context, index) {
+                                  String dateKey =
+                                      groupedMessages.keys.elementAt(index);
+                                  List<ChatModel> dayMessages =
+                                      groupedMessages[dateKey]!;
+
+                                  return Column(
+                                    children: [
+                                      _buildDateHeader(dateKey),
+                                      ...dayMessages.map((message) {
+                                        final isMe = message.from !=
+                                            AuthService
+                                                .getInstance.currentUser!.uid;
+                                        return _buildChatBubble(message, isMe);
+                                      }).toList(),
+                                    ],
+                                  );
+                                },
+                              );
+                            })),
+                    _buildMessageInput(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ));
   }
 
   Widget _buildChatBubble(ChatModel chatMessage, bool isMe) {
@@ -99,9 +110,12 @@ class _ChatScreenState extends State<ChatScreen> {
     Widget? senderInfo;
     if (widget.contact.isGroup && !isMe) {
       // Find the user info from the contact's users list
-        UserInfoModel? sender = widget.contact.users.firstWhere(
-        (user) => user.id == chatMessage.from,  // You'll need to add 'from' field to your message data
-        orElse: () => UserInfoModel(id: '', name: 'Unknown User'),
+      UserModel? sender = widget.contact.users.firstWhere(
+        (user) =>
+            user.id ==
+            chatMessage
+                .from, // You'll need to add 'from' field to your message data
+        orElse: () => UserModel(id: '', name: 'Unknown User'),
       );
 
       senderInfo = Padding(
@@ -140,10 +154,10 @@ class _ChatScreenState extends State<ChatScreen> {
           maxHeight: chatMessage.isImage ? 200.h : double.infinity,
         ),
         decoration: BoxDecoration(
-          color: isMe 
-              ? AppTheme.secondaryColor 
+          color: isMe
+              ? AppTheme.secondaryColor
               : Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[800]
+                  ? Colors.grey[900]
                   : Colors.white,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
@@ -151,7 +165,7 @@ class _ChatScreenState extends State<ChatScreen> {
             bottomLeft: isMe ? const Radius.circular(20) : Radius.zero,
             bottomRight: isMe ? Radius.zero : const Radius.circular(20),
           ),
-          boxShadow: const[
+          boxShadow: const [
             BoxShadow(
               color: Colors.black12,
               blurRadius: 4,
@@ -160,14 +174,14 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         child: Column(
-          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment:
+              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             if (senderInfo != null) senderInfo,
             if (chatMessage.isImage && chatMessage.imageUrl != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                
                 child: CachedNetworkImage(
                   imageUrl: chatMessage.imageUrl!,
                   fit: BoxFit.cover,
@@ -178,29 +192,35 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               )
             else
-              Text(
-                chatMessage.message,
-                style: TextStyle(
-                  color: isMe 
-                      ? Colors.white 
-                      : Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withOpacity(0.87)
-                          : Colors.black.withOpacity(0.87),
-                  fontSize: 16
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Flexible(
+                    child: Text(
+                      chatMessage.message,
+                      style: TextStyle(
+                          color: isMe
+                              ? Colors.white
+                              : Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white.withOpacity(0.87)
+                                  : Colors.black.withOpacity(0.87),
+                          fontSize: 16),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    CommonUtils.formatTime(timestamp),
+                    style: TextStyle(
+                        color: isMe
+                            ? Colors.white.withOpacity(0.7)
+                            : Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white.withOpacity(0.54)
+                                : Colors.black.withOpacity(0.54),
+                        fontSize: 12),
+                  ),
+                ],
               ),
-            SizedBox(height: 5.h),
-            Text(
-              CommonUtils.formatDateTime(timestamp),
-              style: TextStyle(
-                color: isMe 
-                    ? Colors.white.withOpacity(0.7)
-                    : Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withOpacity(0.54)
-                        : Colors.black.withOpacity(0.54),
-                fontSize: 12
-              ),
-            ),
           ],
         ),
       ),
@@ -212,32 +232,34 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 10.h),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => _pickImage(ImageSource.gallery),
-            icon: Icon(Icons.photo_library),
-          ),
-          if (!kIsWeb)  // Only show camera button on mobile
-            IconButton(
-              onPressed: () => _pickImage(ImageSource.camera),
-              icon: Icon(Icons.camera_alt),
-            ),
           Expanded(
             child: TextField(
               onSubmitted: (String value) {
                 _sendMessage();
               },
               controller: _messageController,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.white 
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
                       : Colors.black87),
               decoration: InputDecoration(
                 hintText: 'Type a message...',
-                
-                contentPadding: 
+                contentPadding:
                     EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: Icon(Icons.photo_library),
+                    ),
+                    if (!kIsWeb) // Only show camera button on mobile
+                      IconButton(
+                        onPressed: () => _pickImage(ImageSource.camera),
+                        icon: Icon(Icons.camera_alt),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -278,7 +300,6 @@ class _ChatScreenState extends State<ChatScreen> {
       if (kIsWeb) {
         final pickedFile = await ImagePickerWeb.getImageAsBytes();
         if (pickedFile != null) {
-          
           setState(() {
             _imageData = pickedFile;
           });
@@ -302,7 +323,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendImageMessage(Uint8List imageData) async {
-
     await _provider!.sendImageMessage(
         ChatModel(
             from: AuthService.getInstance.currentUser!.uid,
@@ -311,6 +331,31 @@ class _ChatScreenState extends State<ChatScreen> {
             timestamp: DateTime.now()),
         widget.contact.conversationId,
         imageData);
+  }
 
+  Widget _buildDateHeader(String date) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 10.h),
+      child: Center(
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]
+                : Colors.grey[200],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            date,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.black87,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

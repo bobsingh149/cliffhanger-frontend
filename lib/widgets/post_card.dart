@@ -1,7 +1,8 @@
-import 'package:barter_frontend/models/book.dart';
+import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/models/book_category.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
+import 'package:barter_frontend/widgets/book_details_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
@@ -9,16 +10,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PostCard extends StatelessWidget {
-  final UserBook post;
+  final PostModel post;
 
   const PostCard({Key? key, required this.post}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 5.h, horizontal: 5.w),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      elevation: 3,
+      margin: EdgeInsets.zero,
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,8 +31,10 @@ class PostCard extends StatelessWidget {
                     child: ClipOval(
                       child: CachedNetworkImage(
                         imageUrl: 'https://picsum.photos/seed/picsum/200/300',
-                        placeholder: (context, url) => CircularProgressIndicator(),
-                        errorWidget: (context, url, error) => Icon(Icons.person, size: 20.r),
+                        placeholder: (context, url) =>
+                            CircularProgressIndicator(),
+                        errorWidget: (context, url, error) =>
+                            Icon(Icons.person, size: 20),
                         fit: BoxFit.cover,
                         width: 41.r,
                         height: 41.r,
@@ -42,14 +43,18 @@ class PostCard extends StatelessWidget {
                   ),
                   SizedBox(width: 12.w),
                   Text(
-                    post.username,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                    post.userId,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(width: 10.w),
+                  
                   Padding(
-                    padding: EdgeInsets.only(bottom: 10.w),
+                    padding: EdgeInsets.only(left: 6.w, bottom: 3.w),
                     child: IconButton(
-                      icon: FaIcon(FontAwesomeIcons.userPlus, color: AppTheme.primaryColor, size: 17.r),
+                      icon: FaIcon(FontAwesomeIcons.userPlus,
+                          color: AppTheme.primaryColor, size: 17),
                       onPressed: () {
                         // TODO: Implement connect functionality
                       },
@@ -61,11 +66,13 @@ class PostCard extends StatelessWidget {
               ),
             ),
             CachedNetworkImage(
-              imageUrl: post.postImage ?? (post.coverImages !=null ? post.coverImages![2] : ''),
+              imageUrl: post.postImage ??
+                  (post.coverImages != null ? post.coverImages![2] : ''),
               width: double.infinity,
-              height: 0.47.sh,
+              height: 0.45.sh,
               fit: BoxFit.cover,
-              placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+              placeholder: (context, url) =>
+                  Center(child: CircularProgressIndicator()),
               errorWidget: (context, url, error) => Center(
                 child: Icon(Icons.error, size: 50.r, color: Colors.grey),
               ),
@@ -81,17 +88,42 @@ class PostCard extends StatelessWidget {
                         child: Row(
                           children: [
                             Flexible(
-                              child: Text(
-                                post.title,
-                                style: Theme.of(context).textTheme.bodyLarge,
-                                overflow: TextOverflow.ellipsis,
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => BookDetailsDialog(userBook: post),
+                                  );
+                                },
+                                child: Text(
+                                  post.title,
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ),
                             SizedBox(width: 5.w),
-                            Icon(FontAwesomeIcons.bookOpen, size: 17.r, color: const Color.fromARGB(100, 139, 69, 19)),
+                            Tooltip(
+                              message: 'View Book Details',
+                              child: InkWell(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => BookDetailsDialog(userBook: post),
+                                  );
+                                },
+                                child: Icon(FontAwesomeIcons.bookOpen,
+                                    size: 17.r,
+                                    color: AppTheme.secondaryColor),
+                              ),
+                            ),
                           ],
                         ),
                       ),
+                      SizedBox(width: 8.w),
+                      _buildCategoryTag(context, post.category),
                     ],
                   ),
                   SizedBox(height: 7.h),
@@ -111,11 +143,11 @@ class PostCard extends StatelessWidget {
                           SizedBox(width: 17.w),
                           TextButton(
                             onPressed: () => _showCommentsDialog(context, post),
-                            child: Text('View ${post.comments.length} ${post.comments.length == 1 ? 'comment' : 'comments'}'),
+                            child: Text(
+                                'View ${post.comments.length} ${post.comments.length == 1 ? 'comment' : 'comments'}'),
                           ),
                         ],
                       ),
-                      _buildCategoryTag(context, post.category),
                     ],
                   ),
                   SizedBox(height: 5.h),
@@ -149,15 +181,15 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  void _showCommentsDialog(BuildContext context, UserBook post) {
+  void _showCommentsDialog(BuildContext context, PostModel post) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.9,
+          initialChildSize: 0.7,
           minChildSize: 0.5,
-          maxChildSize: 0.9,
+          maxChildSize: 0.7,
           expand: false,
           builder: (_, controller) {
             return Column(
@@ -232,11 +264,14 @@ class PostCard extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: tagColor,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         category.displayName,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white),
+        style: Theme.of(context)
+            .textTheme
+            .bodySmall
+            ?.copyWith(color: Colors.white),
       ),
     );
   }
@@ -291,7 +326,8 @@ class _ExpandableTextState extends State<ExpandableText> {
               Text(
                 widget.text,
                 maxLines: _expanded ? null : widget.maxLines,
-                overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                overflow:
+                    _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
               ),
               InkWell(
                 onTap: () {
@@ -303,7 +339,10 @@ class _ExpandableTextState extends State<ExpandableText> {
                   padding: EdgeInsets.only(top: 5.h),
                   child: Text(
                     _expanded ? 'Show less' : widget.expandText,
-                    style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 10),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall!
+                        .copyWith(fontSize: 10),
                   ),
                 ),
               ),
@@ -318,16 +357,18 @@ class _ExpandableTextState extends State<ExpandableText> {
 }
 
 class LikeButton extends StatefulWidget {
-  final UserBook post;
+  final PostModel post;
   final Function(int) onLikeChanged;
 
-  const LikeButton({Key? key, required this.post, required this.onLikeChanged}) : super(key: key);
+  const LikeButton({Key? key, required this.post, required this.onLikeChanged})
+      : super(key: key);
 
   @override
   _LikeButtonState createState() => _LikeButtonState();
 }
 
-class _LikeButtonState extends State<LikeButton> with SingleTickerProviderStateMixin {
+class _LikeButtonState extends State<LikeButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   bool _isLiked = false;
@@ -371,11 +412,12 @@ class _LikeButtonState extends State<LikeButton> with SingleTickerProviderStateM
             child: Icon(
               _isLiked ? Icons.favorite : Icons.favorite_border,
               color: _isLiked ? Colors.red : Colors.grey,
-              size: 20.sp,
+              size: 20,
             ),
           ),
           SizedBox(width: 4.w),
-          Text('${widget.post.likesCount}', style: Theme.of(context).textTheme.bodySmall),
+          Text('${widget.post.likesCount}',
+              style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );

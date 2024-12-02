@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:barter_frontend/constants/api_constants.dart';
-import 'package:barter_frontend/models/book.dart';
+import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/utils/http_client.dart';
 import 'package:barter_frontend/utils/service_utils.dart';
 import 'package:http/http.dart' as http;
@@ -26,10 +26,7 @@ class BookService {
     ));
 
     if (response.statusCode == 200) {
-      Map<String, dynamic> bookresponse = jsonDecode(response.body);
-
-      List<dynamic> bookList = bookresponse["data"];
-
+      final List<dynamic> bookList = ServiceUtils.parseResponse(response);
       return bookList.map((book) => Book.fromJson(book)).toList();
     } else {
       throw Exception(ServiceUtils.parseErrorMessage(response));
@@ -42,7 +39,7 @@ class BookService {
         'POST', Uri.parse("${ApiRoutePaths.bookUrl}/saveProduct"));
 
     request.headers['Content-Type'] =
-        'multipart/form-data; boundary=--------------------------592743729287522648443735';
+        'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW';
 
     // Attach the JSON data as a field
     request.fields['data'] = jsonEncode(userBook.toJson());
@@ -60,7 +57,6 @@ class BookService {
 
     // Send the request and await the response
     final response = await request.send();
-
     final responseBody = await http.Response.fromStream(response);
 
     if (response.statusCode != 201) {

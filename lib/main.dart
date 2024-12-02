@@ -1,3 +1,4 @@
+import 'package:barter_frontend/screens/book_buddies_screen.dart';
 import 'package:barter_frontend/screens/chat_screen.dart';
 import 'package:barter_frontend/screens/connection_requests_page.dart';
 import 'package:barter_frontend/provider/auth_provider.dart';
@@ -12,6 +13,7 @@ import 'package:barter_frontend/screens/post_book.dart';
 import 'package:barter_frontend/screens/sign_in_page.dart';
 import 'package:barter_frontend/screens/user_onboarding.dart';
 import 'package:barter_frontend/screens/profile.dart';
+import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,6 +23,23 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:barter_frontend/screens/contacts_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:barter_frontend/models/user.dart';
+import 'package:barter_frontend/models/contact.dart';
+import 'package:barter_frontend/screens/create_group_screen.dart';
+
+class ThemeProvider extends ChangeNotifier {
+  ThemeMode _themeMode = ThemeMode.dark;
+
+  ThemeMode get themeMode => _themeMode;
+
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+  void setThemeMode(ThemeMode mode) {
+    _themeMode = mode;
+    notifyListeners();
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +56,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => PostProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => AuthenticateProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: const BarterApp(),
     ),
@@ -44,87 +64,121 @@ void main() async {
 }
 
 class BarterApp extends StatelessWidget {
-  final _themeMode = ThemeMode.system;
   const BarterApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-        designSize: const Size(1217, 674),
+        designSize: kIsWeb ? const Size(1217, 674) : const Size(360, 690),
         minTextAdapt: true,
         splitScreenMode: true,
         builder: (_, child) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Flutter Demo',
-            theme: AppTheme.getAppropriateLightTheme(), // Light theme
-            darkTheme: AppTheme.getAppropriateDarkTheme(),
-             // Dark theme
-            themeMode: _themeMode, // Set theme mode
-            routes: {
-              AuthCheck.routePath: (context) =>  const ContactsScreen(),
-              MainScreen.routePath: (context) => MainScreen(),
-              HomePage.routePath: (context) => HomePage(),
-              OnboardingPage.routePath: (context) =>
-                  OnboardingPage(), // Add Book screen route
-              ProfilePage.routePath: (context) => ProfilePage(),
-              SignInPage.routePath: (context) => SignInPage(),
-              PostBookPage.routePath: (context) => PostBookPage(),
-              ConnectionRequestsPage.routePath: (context) => const ConnectionRequestsPage(),
-              ContactsScreen.routePath: (context) => ContactsScreen(),
-            },
-            onGenerateRoute: (settings) {
-              if (settings.name == ChatScreen.routePath) {
-                final args = settings.arguments as Map<String, dynamic>;
-                return MaterialPageRoute(
-                  builder: (context) => ChatScreen(
-                    contact: args['contact'],
-                  ),
-                );
-              }
-              return null;
-              // ... handle other routes or return null ...
+          return Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'Flutter Demo',
+                theme: AppTheme.getAppropriateLightTheme(),
+                darkTheme: AppTheme.getAppropriateDarkTheme(),
+                themeMode: themeProvider.themeMode,
+                initialRoute: MainScreen.routePath,
+                onGenerateRoute: (settings) {
+                  return MaterialPageRoute(
+                    builder: (context) => AuthCheck(
+                      targetRoute: settings.name ?? '/',
+                      arguments: settings.arguments,
+                    ),
+                  );
+                },
+              );
             },
           );
         });
   }
 }
 
-
 class AuthCheck extends StatefulWidget {
   static const String routePath = "/";
-  const AuthCheck({super.key});
+  final String targetRoute;
+  final Object? arguments;
+
+  const AuthCheck({
+    super.key,
+    this.targetRoute = '/',
+    this.arguments,
+  });
 
   @override
   State<AuthCheck> createState() => _AuthCheckState();
 }
 
 class _AuthCheckState extends State<AuthCheck> {
-  
+  Widget _getTargetRoute() {
+    switch (widget.targetRoute) {
+      case '/':
+      case MainScreen.routePath:
+        return MainScreen();
+
+      case HomePage.routePath:
+        return HomePage();
+      case OnboardingPage.routePath:
+        return OnboardingPage();
+      case ProfilePage.routePath:
+        return ProfilePage(userId: "user10");
+      case SignInPage.routePath:
+        return SignInPage();
+      case PostBookPage.routePath:
+        return PostBookPage();
+      case ConnectionRequestsPage.routePath:
+        return const ConnectionRequestsPage();
+      case ContactsScreen.routePath:
+        return ContactsScreen();
+      case EditProfilePage.routePath:
+        return const EditProfilePage();
+      case ChatScreen.routePath:
+        // final args = widget.arguments as Map<String, dynamic>?;
+        final dummyContact = ContactModel(
+          conversationId: 'dummy-id',
+          isGroup: false,
+          users: [
+            UserModel(
+              id: 'dummy-user',
+              name: 'Test User',
+              profileImage:
+                  'https://res.cloudinary.com/dllr1e6gn/image/upload/v1/profile_images/aemio6hooqxp1eiqzpev',
+            )
+          ],
+          lastMessage: 'Welcome to chat!',
+          lastMessageTime: DateTime.now(),
+        );
+        return ChatScreen(contact: dummyContact);
+      case CreateGroupScreen.routePath:
+        return const CreateGroupScreen();
+      default:
+        return MainScreen(); // Default fallback
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<User?>(
-      // Checking the Firebase auth status
       future: FirebaseAuth.instance.authStateChanges().first,
       builder: (context, snapshot) {
-        // While the future is resolving (loading)
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CommonWidget.getLoader(); // Show loading indicator
+          return CommonWidget.getLoader();
         }
 
-        // If user is signed in, go to HomePage
-        if (snapshot.hasData && snapshot.data != null) {
-          return const MainScreen();
+        // If user is not signed in, always redirect to SignInPage
+        if (!snapshot.hasData || snapshot.data == null) {
+          return const SignInPage();
         }
 
-        // If no user is signed in, go to LoginPage
-        return const SignInPage();
+        // If user is signed in, navigate to the requested route
+        return _getTargetRoute();
       },
     );
   }
 }
-
 
 /* todo
 swipable cards for the mobile
