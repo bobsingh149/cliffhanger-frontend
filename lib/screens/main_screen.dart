@@ -1,4 +1,5 @@
 import 'package:barter_frontend/models/user.dart';
+import 'package:barter_frontend/models/user_setup.dart';
 import 'package:barter_frontend/screens/connection_requests_page.dart';
 import 'package:barter_frontend/screens/contacts_screen.dart';
 import 'package:barter_frontend/screens/post_book.dart';
@@ -26,24 +27,25 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  final List<bool> _loadedPages = List.generate(6, (index) => index == 0);
 
-  // Web widget options
-  static final List<Widget> _webWidgetOptions = <Widget>[
-    const KeepAlivePage(child: HomePage()),
-    const KeepAlivePage(child: PostBookPage()),
-    const KeepAlivePage(child: ContactsScreen()),
-    const BookBuddiesScreen(),
-    const ConnectionRequestsPage(),
-    KeepAlivePage(child: ProfilePage(userId: AuthService.getInstance.currentUser!.uid)),
+  // Modify the web widget options to use lazy loading
+  List<Widget> get _webWidgetOptions => [
+    _loadedPages[0] ? const KeepAlivePage(child: HomePage()) : Container(),
+    _loadedPages[1] ? const KeepAlivePage(child: PostBookPage()) : Container(),
+    _loadedPages[2] ? const KeepAlivePage(child: ContactsScreen()) : Container(),
+    _loadedPages[3] ? const BookBuddiesScreen() : Container(),
+    _loadedPages[4] ? const ConnectionRequestsPage() : Container(),
+    _loadedPages[5] ? KeepAlivePage(child: ProfilePage(userId: AuthService.getInstance.currentUser!.uid)) : Container(),
   ];
 
-  // Mobile widget options
-  static final List<Widget> _mobileWidgetOptions = <Widget>[
-    const KeepAlivePage(child: HomePage()),
-    const KeepAlivePage(child: PostBookPage()),
-    const KeepAlivePage(child: ContactsScreen()),
-    const BookBuddiesScreen(),
-    KeepAlivePage(child: ProfilePage(userId: AuthService.getInstance.currentUser!.uid)),
+  // Update _mobileWidgetOptions to be a getter with lazy loading
+  List<Widget> get _mobileWidgetOptions => [
+    _loadedPages[0] ? const KeepAlivePage(child: HomePage()) : Container(),
+    _loadedPages[1] ? const KeepAlivePage(child: PostBookPage()) : Container(),
+    _loadedPages[2] ? const KeepAlivePage(child: ContactsScreen()) : Container(),
+    _loadedPages[3] ? const BookBuddiesScreen() : Container(),
+    _loadedPages[4] ? KeepAlivePage(child: ProfilePage(userId: AuthService.getInstance.currentUser!.uid)) : Container(),
   ];
 
   // Web navigation items
@@ -100,6 +102,7 @@ class _MainScreenState extends State<MainScreen> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      _loadedPages[index] = true;
     });
   }
 
@@ -229,9 +232,8 @@ class WebSidebar extends StatelessWidget {
           // Profile Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: FutureBuilder<UserModel?>(
-              future: userProvider
-                  .fetchUser(AuthService.getInstance.currentUser!.uid),
+            child: FutureBuilder<UserSetupModel>(
+              future: userProvider.getUserSetup(AuthService.getInstance.currentUser!.uid),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Column(

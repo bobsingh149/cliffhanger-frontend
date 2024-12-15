@@ -57,7 +57,7 @@ class CommonUtils {
 
     switch (mode) {
       case SnackbarMode.success:
-        backgroundColor = Colors.lightGreen;
+        backgroundColor = Colors.green;
         borderColor = Colors.white;
         textColor = Colors.white;
         break;
@@ -94,7 +94,7 @@ class CommonUtils {
           ),
         ],
       ),
-      width: kIsWeb ? 300 : null,
+      width: kIsWeb ? 370 : null,
       backgroundColor: backgroundColor,
       behavior: kIsWeb ? SnackBarBehavior.floating : SnackBarBehavior.fixed,
       shape: RoundedRectangleBorder(

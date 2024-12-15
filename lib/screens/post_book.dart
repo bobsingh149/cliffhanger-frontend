@@ -3,6 +3,7 @@ import 'package:barter_frontend/models/post_category.dart';
 import 'package:barter_frontend/provider/book_provider.dart';
 import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
+import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:barter_frontend/widgets/search_bar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -356,20 +357,43 @@ class _PostBookPageState extends State<PostBookPage> {
   void _postBook() async {
     Book? book = bookProvider.selectedBook;
     if (book != null) {
-      await bookProvider.postBook(SavePost(
-        title: book.title,
-        score: book.score,
-        category: _selectedCategory!,
-        userId: AuthService.getInstance.currentUser!.uid,
-        caption: _captionController.text.trim(),
-        authors: book.authors,
-        coverImages: book.coverImages,
-        subjects: book.subjects,
-        postImage: bookProvider.fileData,
-      ));
-      // Show success message or navigate to another page
+      try {
+        await bookProvider.postBook(SavePost(
+          title: book.title,
+          score: book.score,
+          category: _selectedCategory!,
+          userId: AuthService.getInstance.currentUser!.uid,
+          caption: _captionController.text.trim(),
+          authors: book.authors,
+          coverImages: book.coverImages,
+          subjects: book.subjects,
+          postImage: bookProvider.fileData,
+        ));
+        
+        // Show success message
+        CommonUtils.displaySnackbar(
+          context: context,
+          message: "Book posted successfully!",
+          mode: SnackbarMode.success,
+        );
+
+     
+        
+      } catch (e) {
+        // Show error message
+        CommonUtils.displaySnackbar(
+          context: context,
+          message: "Failed to post book: ${e.toString()}",
+          mode: SnackbarMode.error,
+        );
+      }
     } else {
-      // Show error message
+      // Show error message for no book selected
+      CommonUtils.displaySnackbar(
+        context: context,
+        message: "Please select a book to post",
+        mode: SnackbarMode.error,
+      );
     }
   }
 }

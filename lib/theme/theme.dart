@@ -17,6 +17,11 @@ class AppTheme {
   static const Color surfaceColorDark = Color(0xFF2C2C2E);
   static const Color textColorLight = Color(0xFF212121);
   static const Color textColorDark = Color(0xFFE1E1E1); // Slightly off-white for better readability
+  static const TextStyle appBarTitleStyle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: primaryColor,
+  );
 
   static BoxDecoration containerDecoration(bool isDark) {
     return BoxDecoration(
@@ -70,10 +75,7 @@ class AppTheme {
         backgroundColor: Colors.white,
         foregroundColor: primaryColor,
         centerTitle: true,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        titleTextStyle: appBarTitleStyle,
       ),
       textTheme: _buildTextTheme(textColorLight),
       cardTheme: CardTheme(
@@ -84,7 +86,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 15.h),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           backgroundColor: primaryColor,
@@ -189,10 +191,7 @@ class AppTheme {
         backgroundColor: surfaceColorDark,
         foregroundColor: primaryColor,
         centerTitle: true,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        titleTextStyle: appBarTitleStyle,
       ),
       textTheme: _buildTextTheme(textColorDark),
       cardTheme: CardTheme(
@@ -204,7 +203,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 15.h),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           backgroundColor: primaryColor.withOpacity(0.7),
@@ -309,10 +308,7 @@ class AppTheme {
         backgroundColor: Colors.white,
         foregroundColor: primaryColor,
         centerTitle: true,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        titleTextStyle: appBarTitleStyle,
       ),
       textTheme: _buildTextTheme(textColorLight),
       cardTheme: CardTheme(
@@ -427,10 +423,7 @@ class AppTheme {
         backgroundColor: surfaceColorDark,
         foregroundColor: primaryColor,
         centerTitle: true,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        titleTextStyle: appBarTitleStyle,
       ),
       textTheme: _buildTextTheme(textColorDark),
       cardTheme: CardTheme(

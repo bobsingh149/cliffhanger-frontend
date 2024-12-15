@@ -12,11 +12,16 @@ import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:barter_frontend/screens/create_group_screen.dart';
 import 'package:barter_frontend/utils/common_decoration.dart';
 
-class ContactsScreen extends StatelessWidget {
+class ContactsScreen extends StatefulWidget {
   static const String routePath = '/contacts';
 
   const ContactsScreen({Key? key}) : super(key: key);
 
+  @override
+  State<ContactsScreen> createState() => _ContactsScreenState();
+}
+
+class _ContactsScreenState extends State<ContactsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

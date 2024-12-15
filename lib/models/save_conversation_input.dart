@@ -2,15 +2,15 @@ class SaveConversationInput {
   final String? conversationId;
   final bool isGroup;
   final List<String> users;
-  final String userId;
+  final String? userId;
   final String? groupName;
   final String? groupImage;
 
   SaveConversationInput({
     this.conversationId,
     required this.isGroup,
-    required this.users,
-    required this.userId,
+    this.users = const [],
+    this.userId,
     this.groupName,
     this.groupImage,
   });

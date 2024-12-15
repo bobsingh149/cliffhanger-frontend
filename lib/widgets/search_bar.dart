@@ -13,7 +13,11 @@ class SearchableDropdown extends StatefulWidget {
   final bool isHomePage;
   Function(Book)? onItemSelected;
 
-  SearchableDropdown({super.key, required this.provider, this.onItemSelected, this.isHomePage = false});
+  SearchableDropdown(
+      {super.key,
+      required this.provider,
+      this.onItemSelected,
+      this.isHomePage = false});
 
   @override
   State<SearchableDropdown> createState() => _SearchableDropdownState();
@@ -58,7 +62,8 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
   }
 
   OverlayEntry _createOverlayEntry() {
-    final RenderBox renderBox = _textFieldKey.currentContext?.findRenderObject() as RenderBox;
+    final RenderBox renderBox =
+        _textFieldKey.currentContext?.findRenderObject() as RenderBox;
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
 
@@ -83,7 +88,8 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
               child: GestureDetector(
                 onTap: () {}, // Prevent taps on the dropdown from closing it
                 child: Container(
-                  constraints: BoxConstraints(minHeight: 230.h, maxHeight: 230.h),
+                  constraints:
+                      BoxConstraints(minHeight: 230.h, maxHeight: 230.h),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(10),
@@ -105,20 +111,31 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                                     leading: ClipRRect(
                                       borderRadius: BorderRadius.circular(7),
                                       child: CachedNetworkImage(
-                                        imageUrl: widget.provider.searchResults[index].coverImages![0],
+                                        imageUrl: widget
+                                            .provider
+                                            .searchResults[index]
+                                            .coverImages![0],
                                         width: 50.w,
                                         height: 50.h,
                                         fit: BoxFit.cover,
-                                        placeholder: (context, url) => CircularProgressIndicator(),
-                                        errorWidget: (context, url, error) => FaIcon(FontAwesomeIcons.bookOpen, size: 50),
+                                        placeholder: (context, url) => FaIcon(
+                                            FontAwesomeIcons.bookOpen,
+                                            size: 50),
+                                        errorWidget: (context, url, error) =>
+                                            FaIcon(FontAwesomeIcons.bookOpen,
+                                                size: 50),
                                       ),
                                     ),
-                                    title: Text(widget.provider.searchResults[index].title),
+                                    title: Text(widget
+                                        .provider.searchResults[index].title),
                                     onTap: () {
                                       setState(() {
-                                        _selectedBook = widget.provider.searchResults[index];
-                                        widget.provider.selectedBook = _selectedBook;
-                                        _controller.text = widget.provider.searchResults[index].title;
+                                        _selectedBook = widget
+                                            .provider.searchResults[index];
+                                        widget.provider.selectedBook =
+                                            _selectedBook;
+                                        _controller.text = widget.provider
+                                            .searchResults[index].title;
                                         if (_isDropdownOpen) _closeDropdown();
                                       });
                                     },
@@ -150,16 +167,14 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                 prefixIcon: _selectedBook == null
                     ? Padding(
                         padding: EdgeInsets.only(
-                          left: 10.w, 
-                          top: widget.isHomePage ? 5.w : 7.h
-                        ),
+                            left: 10.w, top: widget.isHomePage ? 5.w : 7.h),
                         child: FaIcon(FontAwesomeIcons.magnifyingGlass),
                       )
                     : null,
                 hintText: 'Search your book ...',
-                contentPadding: widget.isHomePage 
-                    ? EdgeInsets.only(top: 5.h)
-                    : EdgeInsets.zero,
+                contentPadding: widget.isHomePage
+                    ? EdgeInsets.only(top: 5.h, left: 10.w)
+                    : EdgeInsets.only(left: 10.w),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -169,17 +184,17 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                   _startedTyping = value.isNotEmpty;
                   openDropdown();
                 });
-            
+
                 if (_debounce?.isActive ?? false) _debounce?.cancel();
-            
-                _debounce = Timer(const Duration(milliseconds: 300), () async {
+
+                _debounce = Timer(const Duration(milliseconds: 500), () async {
                   setState(() {
                     if (widget.provider.searchResults.isEmpty) {
                       isLoading = true;
                       openDropdown();
                     }
                   });
-            
+
                   await widget.provider.query(value);
                   setState(() {
                     openDropdown();

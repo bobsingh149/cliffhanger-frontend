@@ -1,7 +1,5 @@
 // lib/providers/user_provider.dart
-
-import 'dart:typed_data';
-
+import 'package:barter_frontend/exceptions/user_exceptions.dart';
 import 'package:barter_frontend/models/chat.dart';
 import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/models/user.dart';
@@ -53,7 +51,7 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<UserModel> getBookBuddy() async {
+  Future<GetBookBuddy> getBookBuddy() async {
     try {
       return await _userService.getBookBuddy(_user?.id ?? '');
     } catch (e) {
@@ -83,13 +81,27 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  void clearUserSetup() {
+    _user = null;
+  }
   // Method to get user setup
   Future<UserSetupModel> getUserSetup(String userId) async {
+    if (_user != null) {
+      return _user!;
+    }
+
     try {
-      return _user = await _userService.getUserSetup(userId);
+      _logger.i('Fetching user setup for $userId');
+      _user = await _userService.getUserSetup(userId);
+      
+      if (_user == null) {
+        throw UserNotFoundException(userId, 'User setup not found');
+      }
+      
+      return _user!;
     } catch (e) {
       _logger.e('Error fetching user setup: $e');
-      rethrow;
+      throw UserNotFoundException(userId, 'Failed to fetch user setup: $e');
     }
   }
 

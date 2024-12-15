@@ -3,21 +3,23 @@ class ApiRoutePaths {
   static const String userUrl = "$baseUrl/user";
   static const String bookUrl = "$baseUrl/product";
   static const String chatUrl = "$baseUrl/chat";
+  static const String getUser = "$userUrl/getUserById";
   static const String getAllProducts = "$bookUrl/getAllProducts";
   static const String getByBarterFilter = "$bookUrl/getByBarterFilter";
   static const String getPostsBySearch = "$bookUrl/getPostsBySearch";
   static const String getBookBuddies = "$userUrl/getBookBuddies";
   static const String getRequests = "$userUrl/getRequests";
   static const String getConnections = "$userUrl/getConnectionsByIds";
-  static const String getBookBuddy = '/getBookBuddy';
-  static const String updateUser = '/updateUser';
-  static const String saveConnection = '/saveConnection';
-  static const String getUserSetup = '/getUserSetup';
-  static const String getCommonUsers = '/getCommonUsers';
-  static const String saveRequest = '/saveRequest';
-  static const String removeRequest = '/removeRequest';
-  static const String deleteUser = '/deleteUserById';
-  static const String getComments = '/getComments';
+  static const String getBookBuddy = "$userUrl/getBookBuddy";
+  static const String updateUser = "$userUrl/updateUser";
+  static const String saveConnection = "$userUrl/saveConnection";
+  static const String getUserSetup = "$userUrl/getUserSetup";
+  static const String getCommonUsers = "$userUrl/getCommonUsers";
+  static const String saveRequest = "$userUrl/saveRequest";
+  static const String removeRequest = "$userUrl/removeRequest";
+  static const String deleteUser = "$userUrl/deleteUserById";
+  static const String getComments = "$bookUrl/getComments";
+  static const String saveUser = "$userUrl/saveUser";
 }
 
 class ApiHeaders {

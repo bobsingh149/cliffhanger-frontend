@@ -179,7 +179,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             : SingleChildScrollView(
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: kIsWeb ? 0.15.sw : 16.w,
+                    horizontal: kIsWeb ? 0.25.sw : 16.w,
                     vertical: kIsWeb ? 30.h : 16.h,
                   ),
                   child: FadeInUp(

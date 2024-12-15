@@ -1,5 +1,6 @@
 import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/models/post_category.dart';
+import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/services/post_service.dart';
 import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:flutter/material.dart';
@@ -22,10 +23,6 @@ class PostProvider with ChangeNotifier {
   }
 
   Future<Map<PostCategory, List<PostModel>>?> getUserPosts(String userId) async {
-    if (_proflePosts != null) {
-      return _proflePosts;
-    }
-
     try {
       _proflePosts = {};
       for (var category in postCategoryList) {
@@ -45,22 +42,22 @@ class PostProvider with ChangeNotifier {
     }
   }
 
-  List<PostModel>? _feedPosts;
-
-  List<PostModel>? get feedPosts => _feedPosts;
 
   Future<List<PostModel>> getFeedPosts({
     required FilterType filterType,
     required String userId,
-    int page = 0, 
-    int size = 10,
+    required int page,
+    required int size,
     String? searchQuery,
     String? city,
   }) async {
     try {
+      
+  
+    List<PostModel> newPosts;
       switch (filterType) {
         case FilterType.all:
-          _feedPosts = await _postService.getAllPosts(
+          newPosts = await _postService.getAllPosts(
             userId,
             page: page,
             size: size,
@@ -69,12 +66,12 @@ class PostProvider with ChangeNotifier {
           break;
           
         case FilterType.userPosts:
-          _feedPosts = await _postService.getPostsByUser(userId);
+          newPosts = await _postService.getPostsByUser(userId);
           break;
           
         case FilterType.barter:
           if (city == null) throw Exception('City is required for barter filter');
-          _feedPosts = await _postService.getBarterPosts(
+          newPosts = await _postService.getBarterPosts(
             userId,
             city: city,
             page: page,
@@ -84,7 +81,7 @@ class PostProvider with ChangeNotifier {
           
         case FilterType.search:
           if (searchQuery == null) throw Exception('Search query is required');
-          _feedPosts = await _postService.searchPosts(
+          newPosts = await _postService.searchPosts(
             userId,
             searchQuery: searchQuery,
             page: page,
@@ -95,7 +92,8 @@ class PostProvider with ChangeNotifier {
           throw Exception('filter type not currently supported');
       }
 
-      return _feedPosts!;
+      return newPosts;
+      
     } catch (err) {
       _logger.e(err);
       rethrow;
@@ -111,4 +109,42 @@ class PostProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+
+  Future<void>  likePost(String postId) async {
+    try {
+      final userId = AuthService.getInstance.currentUser?.uid;
+      if (userId == null) throw Exception('User not authenticated');
+      await _postService.likePost(postId, userId);
+      notifyListeners(); // Notify listeners to rebuild UI if needed
+    } catch (err) {
+      _logger.e(err);
+      rethrow;
+    }
+  }
+
+  
+   Future<void> addComment(String postId, String comment) async {
+    try {
+      final userId = AuthService.getInstance.currentUser?.uid;
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _postService.postComment(postId, userId, comment);
+      notifyListeners();
+    } catch (err) {
+      _logger.e(err);
+      rethrow;
+    }
+  }
+
+  Future<void> likeComment(String postId, String commentId) async {
+    try {
+      await _postService.likeComment(postId, commentId);
+      notifyListeners();
+    } catch (err) {
+      _logger.e(err);
+      rethrow;
+    }
+  }
+  
 }

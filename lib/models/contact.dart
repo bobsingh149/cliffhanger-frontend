@@ -67,15 +67,15 @@ class ConversationInputModel {
   final String? conversationId;
   final bool isGroup;
   final List<String> members;
-  final String userId;
+  final String? userId;
   final String? groupName;
   final String? groupImage;
 
   ConversationInputModel({
     this.conversationId,
     required this.isGroup,
-    required this.members,
-    required this.userId,
+    this.members = const [],
+    this.userId,
     this.groupName,
     this.groupImage,
   });

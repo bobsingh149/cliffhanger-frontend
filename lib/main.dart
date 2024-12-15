@@ -27,6 +27,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/screens/create_group_screen.dart';
+import 'package:barter_frontend/screens/link_screen.dart';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.dark;
@@ -81,7 +82,7 @@ class BarterApp extends StatelessWidget {
                 theme: AppTheme.getAppropriateLightTheme(),
                 darkTheme: AppTheme.getAppropriateDarkTheme(),
                 themeMode: themeProvider.themeMode,
-                initialRoute: MainScreen.routePath,
+                initialRoute: '/',
                 onGenerateRoute: (settings) {
                   return MaterialPageRoute(
                     builder: (context) => AuthCheck(
@@ -114,11 +115,15 @@ class AuthCheck extends StatefulWidget {
 
 class _AuthCheckState extends State<AuthCheck> {
   Widget _getTargetRoute() {
+    // First, check if the route is public
+    if (widget.targetRoute == LinksPage.routePath) {
+      return const LinksPage();
+    }
+
+    // Then handle authenticated routes
     switch (widget.targetRoute) {
-      case '/':
       case MainScreen.routePath:
         return MainScreen();
-
       case HomePage.routePath:
         return HomePage();
       case OnboardingPage.routePath:
@@ -144,6 +149,7 @@ class _AuthCheckState extends State<AuthCheck> {
             UserModel(
               id: 'dummy-user',
               name: 'Test User',
+              bookBuddyCount: 6,
               profileImage:
                   'https://res.cloudinary.com/dllr1e6gn/image/upload/v1/profile_images/aemio6hooqxp1eiqzpev',
             )
@@ -155,12 +161,17 @@ class _AuthCheckState extends State<AuthCheck> {
       case CreateGroupScreen.routePath:
         return const CreateGroupScreen();
       default:
-        return MainScreen(); // Default fallback
+        return const MainScreen(); // Default fallback
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Allow public routes without authentication
+    if (widget.targetRoute == LinksPage.routePath) {
+      return _getTargetRoute();
+    }
+
     return FutureBuilder<User?>(
       future: FirebaseAuth.instance.authStateChanges().first,
       builder: (context, snapshot) {

@@ -157,28 +157,62 @@ class PostModel extends Book {
   }
 }
 
+class UserBasicInfo {
+  final String id;
+  final String name;
+  final String? profileImage;
+
+  UserBasicInfo({
+    required this.id,
+    required this.name,
+    this.profileImage,
+  });
+
+  factory UserBasicInfo.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return UserBasicInfo(
+        id: '',
+        name: '',
+      );
+    }
+    return UserBasicInfo(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      profileImage: json['profileImage'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'profileImage': profileImage,
+    };
+  }
+}
+
 class Comment {
   final String id;
   final String text;
-  final UserModel userInfo;
+  final UserBasicInfo userBasicInfo;
   final DateTime timestamp;
-  final int likeCount;
+  final int likesCount;
 
   Comment({
     required this.id,
     required this.text,
-    required this.userInfo,
+    required this.userBasicInfo,
     required this.timestamp,
-    required this.likeCount,
+    required this.likesCount,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
     return Comment(
       id: json['id'] as String,
       text: json['text'] as String,
-      userInfo: UserModel.fromJson(json['userResponse']),
+      userBasicInfo: UserBasicInfo.fromJson(json['userBasicInfo']),
       timestamp: DateTime.parse(json['timestamp']),
-      likeCount: json['likeCount'] as int,
+      likesCount: json['likeCount'] as int,
     );
   }
 
@@ -186,9 +220,9 @@ class Comment {
     return {
       'id': id,
       'text': text,
-      'userResponse': userInfo.toJson(),
+      'userBasicInfo': userBasicInfo.toJson(),
       'timestamp': timestamp.toIso8601String(),
-      'likeCount': likeCount,
+      'likeCount': likesCount,
     };
   }
 }

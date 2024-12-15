@@ -197,7 +197,7 @@ class PostService {
 
   Future<List<Comment>> getComments(String postId) async {
     final response = await client.get(
-      Uri.parse('${ApiRoutePaths.bookUrl}${ApiRoutePaths.getComments}/$postId'),
+      Uri.parse('${ApiRoutePaths.getComments}/$postId'),
     );
 
     if (response.statusCode == 200) {

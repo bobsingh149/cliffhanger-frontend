@@ -1,12 +1,16 @@
 import 'package:barter_frontend/main.dart';
 import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/models/post_category.dart';
+import 'package:barter_frontend/models/save_request_input.dart';
+import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/provider/post_provider.dart';
+import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/screens/edit_profile.dart';
 import 'package:barter_frontend/screens/home_page.dart';
 import 'package:barter_frontend/screens/sign_in_page.dart';
 import 'package:barter_frontend/screens/connection_requests_page.dart';
 import 'package:barter_frontend/services/auth_services.dart';
+import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:barter_frontend/widgets/user_post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -28,6 +32,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   PostProvider? provider;
   late Future<Map<PostCategory, List<PostModel>>?> _userPostsFuture;
+  late Future<UserModel?> _userFuture;
   bool isInit = true;
   @override
   void didChangeDependencies() {
@@ -35,6 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (isInit) {
       provider = Provider.of<PostProvider>(context, listen: false);
       _userPostsFuture = provider!.getUserPosts(widget.userId);
+      _userFuture = Provider.of<UserProvider>(context, listen: false).fetchUser(widget.userId);
       isInit = false;
     }
   }
@@ -51,12 +57,12 @@ class _ProfilePageState extends State<ProfilePage> {
           title: Text(
             widget.userId == AuthService.getInstance.currentUser!.uid 
               ? "My Library"
-              : "Mansi's Library",
+              : "User's Library",
             
           ),
           actions: [
             if (widget.userId == AuthService.getInstance.currentUser!.uid) ...[
-              IconButton(
+              if (!kIsWeb) IconButton(
                 icon: Icon(Icons.person_add),
                 onPressed: () {
                   Navigator.pushNamed(context, ConnectionRequestsPage.routePath);
@@ -68,8 +74,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   if (value == 'edit_profile') {
                     Navigator.pushNamed(context, EditProfilePage.routePath);
                   } else if (value == 'logout') {
+                    Provider.of<UserProvider>(context, listen: false).clearUserSetup();
                     AuthService.getInstance.signOut();
-                    Navigator.pushReplacementNamed(context, SignInPage.routePath);
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      SignInPage.routePath,
+                      (route) => false,
+                    );
                   }
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -105,9 +115,29 @@ class _ProfilePageState extends State<ProfilePage> {
             ] else ...[
               IconButton(
                 icon: Icon(Icons.person_add),
-                onPressed: () {
-                  // TODO: Implement connect functionality
-                  // You can add your connection logic here
+                onPressed: () async {
+                  try {
+                    final currentUserId = AuthService.getInstance.currentUser!.uid;
+                    final requestInput = SaveRequestInput(
+                      id: currentUserId,
+                      requestId: widget.userId,
+                    );
+                    
+                    await Provider.of<UserProvider>(context, listen: false)
+                        .saveRequest(requestInput);
+                    
+                    CommonUtils.displaySnackbar(
+                      context: context,
+                      message: 'Connection request sent successfully!',
+                      mode: SnackbarMode.success,
+                    );
+                  } catch (e) {
+                    CommonUtils.displaySnackbar(
+                      context: context,
+                      message: 'Failed to send connection request: $e',
+                      mode: SnackbarMode.error,
+                    );
+                  }
                 },
               ),
             ],
@@ -123,24 +153,41 @@ class _ProfilePageState extends State<ProfilePage> {
           onRefresh: () async {
             setState(() {
               _userPostsFuture = provider!.getUserPosts(widget.userId);
+              _userFuture = Provider.of<UserProvider>(context, listen: false).fetchUser(widget.userId);
             });
           },
-          child: FutureBuilder<Map<PostCategory, List<PostModel>>?>(
-            future: _userPostsFuture,
+          child: FutureBuilder<List<dynamic>>(
+            future: Future.wait([_userPostsFuture, _userFuture]),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return CommonWidget.getLoader();
               }
 
               if (snapshot.hasError) {
-                return Center(child: Text('Error loading posts'));
+                return Center(child: Text('Error loading data'));
               }
+
+              final posts = snapshot.data![0] as Map<PostCategory, List<PostModel>>?;
+              final user = snapshot.data![1] as UserModel?;
+
+              if (user == null) {
+                return Center(child: Text('User not found'));
+              }
+
+              final postsCount = posts?.values.expand((posts) => posts).length ?? 0;
+              final bartersCount = posts?[PostCategory.barter]?.length ?? 0;
 
               return DefaultTabController(
                 length: postCategoryList.length,
                 child: NestedScrollView(
                   headerSliverBuilder: (context, _) => [
-                    SliverToBoxAdapter(child: UserProfileSection()),
+                    SliverToBoxAdapter(
+                      child: UserProfileSection(
+                        user: user,
+                        postsCount: postsCount,
+                        bartersCount: bartersCount,
+                      ),
+                    ),
                     SliverPersistentHeader(
                       delegate: _SliverAppBarDelegate(
                         TabBar(
@@ -191,6 +238,16 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 class UserProfileSection extends StatelessWidget {
+  final UserModel user;
+  final int postsCount;
+  final int bartersCount;
+
+  const UserProfileSection({
+    required this.user,
+    required this.postsCount,
+    required this.bartersCount,
+  });
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -205,11 +262,9 @@ class UserProfileSection extends StatelessWidget {
                 backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                 child: ClipOval(
                   child: CachedNetworkImage(
-                    imageUrl:
-                        'https://res.cloudinary.com/dllr1e6gn/image/upload/v1/profile_images/aemio6hooqxp1eiqzpev', // Replace with actual URL
+                    imageUrl: user.profileImage ?? '',
                     placeholder: (context, url) => Container(
                       color: theme.colorScheme.surface,
-                
                     ),
                     errorWidget: (context, url, error) =>
                         Icon(Icons.person, size: 50),
@@ -224,20 +279,24 @@ class UserProfileSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Mansi Great',
-                          style: theme.textTheme.headlineMedium,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
                     Text(
-                      'Book lover and avid reader!',
-                      style: theme.textTheme.bodyMedium,
+                      user.name,
+                      style: theme.textTheme.headlineMedium,
                     ),
+                    if (user.age != null || user.city?.isNotEmpty == true)
+                      Text(
+                        [
+                          if (user.age != null) '${user.age} years',
+                          if (user.city?.isNotEmpty == true) user.city,
+                        ].join('  '),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    SizedBox(height: 4.h),
+                    if (user.bio?.isNotEmpty == true)
+                      Text(
+                        user.bio!,
+                        style: theme.textTheme.bodyMedium,
+                      ),
                     SizedBox(height: 5.h),
                     TextButton(
                       onPressed: () {
@@ -264,9 +323,9 @@ class UserProfileSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatColumn('Posts', '120'),
-              _buildStatColumn('Book Buddies', '1.2k'),
-              _buildStatColumn('Barters', '350'),
+              _buildStatColumn('Posts', postsCount.toString()),
+              _buildStatColumn('Book Buddies', user.bookBuddyCount.toString()),
+              _buildStatColumn('Barters', bartersCount.toString()),
             ],
           ),
         ],

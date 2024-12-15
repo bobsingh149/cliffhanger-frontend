@@ -4,6 +4,7 @@ import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/provider/auth_provider.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/screens/home_page.dart';
+import 'package:barter_frontend/screens/main_screen.dart';
 import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
@@ -124,7 +125,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       );
 
       if (mounted) {
-        Navigator.of(context).popAndPushNamed(HomePage.routePath);
+        Navigator.of(context).popAndPushNamed(MainScreen.routePath);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -321,6 +322,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ),
           ),
           SizedBox(height: 16.h),
+           FadeInRight(
+            duration: Duration(milliseconds: 700),
+            child: StaticSearchbar(
+              focusNode: _focusNodes[3],
+              onItemSelected: (selectedCity) {
+                _selectedCity = selectedCity;
+                _fieldFocusChange(context, 3);
+              },
+            ),
+          ),
+                    SizedBox(height: 16.h),
+    
           FadeInLeft(
             duration: Duration(milliseconds: 700),
             child: TextFormField(
@@ -331,17 +344,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               onFieldSubmitted: (_) => _fieldFocusChange(context, 2),
             ),
           ),
-          SizedBox(height: 16.h),
-          FadeInRight(
-            duration: Duration(milliseconds: 700),
-            child: StaticSearchbar(
-              focusNode: _focusNodes[3],
-              onItemSelected: (selectedCity) {
-                _selectedCity = selectedCity;
-                _fieldFocusChange(context, 3);
-              },
-            ),
-          ),
+         
           SizedBox(height: 35.h),
           FadeInUp(
             duration: Duration(milliseconds: 700),
@@ -362,9 +365,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final double horizontalPadding = kIsWeb ? 350.w : 0.w;
-    final double verticalPadding = kIsWeb ? 10.h : 5.h;
-
     return Scaffold(
       body: SafeArea(
         child: _isLoading
@@ -373,7 +373,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 duration: const Duration(milliseconds: 700),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(
-                    horizontal: kIsWeb ? 0.15.sw : 0.w,
+                    horizontal: kIsWeb ? 0.27.sw : 0.w,
                     vertical: kIsWeb ? 30.h : 5.h,
                   ),
                   child: kIsWeb

@@ -30,7 +30,7 @@ class BookDetailsDialog extends StatelessWidget {
                     borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                     child: CachedNetworkImage(
                       imageUrl: userBook.coverImages?.isNotEmpty == true
-                          ? userBook.coverImages![0]
+                          ? userBook.coverImages![2]
                           : '',
                       height: 350.h,
                       width: double.infinity,

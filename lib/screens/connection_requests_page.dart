@@ -11,10 +11,15 @@ import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:barter_frontend/models/user_setup.dart';
 import 'package:barter_frontend/utils/common_decoration.dart';
 
-class ConnectionRequestsPage extends StatelessWidget {
+class ConnectionRequestsPage extends StatefulWidget {
   static const String routePath = "/connection-requests";
   const ConnectionRequestsPage({super.key});
 
+  @override
+  State<ConnectionRequestsPage> createState() => _ConnectionRequestsPageState();
+}
+
+class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -22,6 +27,8 @@ class ConnectionRequestsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: !kIsWeb,
+                backgroundColor: theme.colorScheme.background,
+
         title: Text(
           'Connection Requests',
         ),

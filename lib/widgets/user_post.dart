@@ -10,10 +10,15 @@ import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:barter_frontend/widgets/book_details_dialog.dart';
 import 'package:provider/provider.dart';
 
-class UserPost extends StatelessWidget {
+class UserPost extends StatefulWidget {
   final PostModel userBook;
   const UserPost({super.key, required this.userBook});
 
+  @override
+  State<UserPost> createState() => _UserPostState();
+}
+
+class _UserPostState extends State<UserPost> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -22,7 +27,7 @@ class UserPost extends StatelessWidget {
       onTap: () {
         showDialog(
           context: context,
-          builder: (context) => PostDetailsDialog(userBook: userBook),
+          builder: (context) => PostDetailsDialog(userBook: widget.userBook),
         );
       },
       child: Card(
@@ -38,9 +43,9 @@ class UserPost extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(kIsWeb ? 12 : 8)),
                 child: CachedNetworkImage(
-                  imageUrl: userBook.postImage ??
-                      (userBook.coverImages?.isNotEmpty == true
-                          ? userBook.coverImages![0]
+                  imageUrl: widget.userBook.postImage ??
+                      (widget.userBook.coverImages?.isNotEmpty == true
+                          ? widget.userBook.coverImages![2]
                           : ''),
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -68,11 +73,11 @@ class UserPost extends StatelessWidget {
                             onTap: () {
                               showDialog(
                                 context: context,
-                                builder: (context) => BookDetailsDialog(userBook: userBook),
+                                builder: (context) => BookDetailsDialog(userBook: widget.userBook),
                               );
                             },
                             child: Text(
-                              userBook.title,
+                              widget.userBook.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleSmall?.copyWith(
@@ -88,7 +93,7 @@ class UserPost extends StatelessWidget {
                             onTap: () {
                               showDialog(
                                 context: context,
-                                builder: (context) => BookDetailsDialog(userBook: userBook),
+                                builder: (context) => BookDetailsDialog(userBook: widget.userBook),
                               );
                             },
                             child: FaIcon(
@@ -102,7 +107,7 @@ class UserPost extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      userBook.caption,
+                      widget.userBook.caption,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall,
@@ -163,7 +168,7 @@ class PostDetailsDialog extends StatelessWidget {
                         itemCount: comments.length,
                         itemBuilder: (context, index) {
                           return ListTile(
-                            title: Text(comments[index].userInfo.name),
+                            title: Text(comments[index].userBasicInfo.name),
                             subtitle: Text(comments[index].text),
                           );
                         },
@@ -239,7 +244,7 @@ class PostDetailsDialog extends StatelessWidget {
                         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                         child: CachedNetworkImage(
                           imageUrl: userBook.postImage ?? 
-                              (userBook.coverImages?.isNotEmpty == true ? userBook.coverImages![0] : ''),
+                              (userBook.coverImages?.isNotEmpty == true ? userBook.coverImages![2] : ''),
                           width: double.infinity,
                           height: 0.45.sh,
                           fit: BoxFit.cover,

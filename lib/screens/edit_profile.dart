@@ -92,6 +92,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       try {
+
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         
         final updatedUser = UserModel(
@@ -104,6 +105,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         await userProvider.updateUser(updatedUser, _imageData);
         
+        userProvider.clearUserSetup();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile updated successfully')),

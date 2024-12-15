@@ -31,7 +31,7 @@ class UserService {
 
   Future<UserModel?> fetchUser(String userId) async {
     final response =
-        await client.get(Uri.parse('${ApiRoutePaths.userUrl}/$userId'));
+        await client.get(Uri.parse('${ApiRoutePaths.getUser}/$userId'));
 
     if (response.statusCode == 200) {
       return UserModel.fromJson(ServiceUtils.parseResponse(response));
@@ -46,7 +46,7 @@ class UserService {
     AppLogger.instance.e('Saving user: $user');
 
     var request = http.MultipartRequest(
-        'POST', Uri.parse("${ApiRoutePaths.userUrl}/saveUser"));
+        'POST', Uri.parse(ApiRoutePaths.saveUser));
 
     request.headers['Content-Type'] = ApiHeaders.multipartFormData;
 
@@ -73,14 +73,13 @@ class UserService {
     }
   }
 
-  Future<UserModel> getBookBuddy(String userId) async {
+  Future<GetBookBuddy> getBookBuddy(String userId) async {
     final response = await client.get(
-      Uri.parse(
-          '${ApiRoutePaths.userUrl}${ApiRoutePaths.getBookBuddy}?id=$userId'),
+      Uri.parse('${ApiRoutePaths.getBookBuddy}?id=$userId'),
     );
 
     if (response.statusCode == 200) {
-      return UserModel.fromJson(ServiceUtils.parseResponse(response));
+      return GetBookBuddy.fromJson(ServiceUtils.parseResponse(response)[0]);
     } else {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
@@ -89,8 +88,8 @@ class UserService {
   Future<void> updateUser(UserModel user, Uint8List? profileImage) async {
     AppLogger.instance.i('Updating user: $user');
 
-    var request = http.MultipartRequest('PUT',
-        Uri.parse("${ApiRoutePaths.userUrl}${ApiRoutePaths.updateUser}"));
+    var request = http.MultipartRequest(
+        'PUT', Uri.parse(ApiRoutePaths.updateUser));
 
     request.headers['Content-Type'] = ApiHeaders.multipartFormData;
 
@@ -122,7 +121,7 @@ class UserService {
 
   Future<void> saveConnection(SaveConversationInput input) async {
     final response = await client.post(
-      Uri.parse('${ApiRoutePaths.userUrl}${ApiRoutePaths.saveConnection}'),
+      Uri.parse(ApiRoutePaths.saveConnection),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(input.toJson()),
     );
@@ -134,8 +133,7 @@ class UserService {
 
   Future<UserSetupModel> getUserSetup(String userId) async {
     final response = await client.get(
-      Uri.parse(
-          '${ApiRoutePaths.userUrl}${ApiRoutePaths.getUserSetup}/$userId'),
+      Uri.parse('${ApiRoutePaths.getUserSetup}/$userId'),
     );
 
     if (response.statusCode == 200) {
@@ -148,8 +146,7 @@ class UserService {
   Future<List<UserModel>> getCommonUsers(String userId,
       {required int page, required int size}) async {
     final response = await client.get(
-      Uri.parse(
-          '${ApiRoutePaths.userUrl}${ApiRoutePaths.getCommonUsers}/$userId?page=$page&size=$size'),
+      Uri.parse('${ApiRoutePaths.getCommonUsers}/$userId?page=$page&size=$size'),
     );
 
     if (response.statusCode == 200) {
@@ -162,7 +159,7 @@ class UserService {
 
   Future<void> saveRequest(SaveRequestInput input) async {
     final response = await client.post(
-      Uri.parse('${ApiRoutePaths.userUrl}${ApiRoutePaths.saveRequest}'),
+      Uri.parse(ApiRoutePaths.saveRequest),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(input.toJson()),
     );
@@ -174,7 +171,7 @@ class UserService {
 
   Future<void> removeRequest(SaveRequestInput input) async {
     final response = await client.delete(
-      Uri.parse('${ApiRoutePaths.userUrl}${ApiRoutePaths.removeRequest}'),
+      Uri.parse(ApiRoutePaths.removeRequest),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(input.toJson()),
     );
@@ -186,7 +183,7 @@ class UserService {
 
   Future<void> deleteUser(String userId) async {
     final response = await client.delete(
-      Uri.parse('${ApiRoutePaths.userUrl}${ApiRoutePaths.deleteUser}/$userId'),
+      Uri.parse('${ApiRoutePaths.deleteUser}/$userId'),
     );
 
     if (response.statusCode != 200) {
@@ -202,7 +199,7 @@ class UserService {
   }) async {
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('${ApiRoutePaths.userUrl}${ApiRoutePaths.saveConnection}'),
+      Uri.parse(ApiRoutePaths.saveConnection),
     );
 
     // Create ConversationInputModel

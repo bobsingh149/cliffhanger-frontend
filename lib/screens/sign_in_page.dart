@@ -12,6 +12,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:sign_button/sign_button.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:barter_frontend/screens/link_screen.dart';
 
 class SignInPage extends StatefulWidget {
   static const String routePath = '/SignIn';
@@ -179,13 +180,41 @@ class _SignInPageState extends State<SignInPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Cliffhanger',
-                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Cliffhanger',
+                              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pushNamed(LinksPage.routePath);
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                foregroundColor: Theme.of(context).colorScheme.primary,
+                                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  side: BorderSide(
+                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              child: Text('Project Links'),
+                            ),
+                          ],
                         ),
                         SizedBox(height: 35.h),
 
