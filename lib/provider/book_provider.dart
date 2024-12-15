@@ -1,43 +1,43 @@
-import 'package:barter_frontend/models/book.dart';
+import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/services/book_services.dart';
+import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_picker_web/image_picker_web.dart';
+import 'package:image_picker_web/image_picker_web.dart' if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
 
 class BookProvider with ChangeNotifier {
   List<Book> _searchResults = [];
   final BookService bookService = BookService.getInstance;
-  String? errorMessage;
   bool isLoading = false;
   Book? selectedBook;
-  final ImagePicker picker = ImagePicker(); 
+  final ImagePicker picker = ImagePicker();
   Uint8List? fileData;
 
   List<Book> get searchResults {
     return _searchResults;
   }
 
-  Future<void> query(String query) async {
+  Future<List<Book>> query(String query) async {
     try {
-      _searchResults = await bookService.getResults(query);
+      return _searchResults = await bookService.getResults(query);
     } catch (err) {
-      errorMessage = err.toString();
+      AppLogger.instance.e("error message:  ${err.toString()}");
+      rethrow;
     } finally {
       notifyListeners();
     }
   }
 
-  Future<bool> postBook(PostUserBook userBook) async {
+  Future<bool> postBook(SavePost userBook) async {
     isLoading = true;
     notifyListeners();
     try {
       await bookService.postBook(userBook);
-      print("success");
+      AppLogger.instance.i("success");
 
       return true;
     } catch (err) {
-      errorMessage = err.toString();
-      print("error message:  $errorMessage");
+      AppLogger.instance.e("error message:  ${err.toString()}");
       return false;
     } finally {
       isLoading = false;
@@ -55,6 +55,6 @@ class BookProvider with ChangeNotifier {
         fileData = await pickedFile.readAsBytes();
       }
     }
-      notifyListeners();
+    notifyListeners();
   }
 }

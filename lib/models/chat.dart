@@ -1,30 +1,33 @@
 class ChatModel {
   String from;  // Single user who sent the message
-  List<String> to;  // List of users (for group or multiple recipients)
   String message;
   bool isRead;
   bool isGroup;
   DateTime timestamp;
+  bool isImage;
+  String? imageUrl;
 
   // Constructor
   ChatModel({
     required this.from,
-    required this.to,
     required this.message,
     this.isRead = false,
     this.isGroup = false,
     required this.timestamp,
+    required this.isImage,
+    this.imageUrl,
   });
 
   // Convert a ChatModel instance to JSON
   Map<String, dynamic> toJson() {
     return {
       'from': from,
-      'to': to,
       'message': message,
       'isRead': isRead,
       'isGroup': isGroup,
       'timestamp': timestamp.millisecondsSinceEpoch,
+      'isImage': isImage,
+      'imageUrl': imageUrl,
     };
   }
 
@@ -32,11 +35,12 @@ class ChatModel {
   factory ChatModel.fromJson(Map<String, dynamic> json) {
     return ChatModel(
       from: json['from'],
-      to: List<String>.from(json['to']), // Convert to list of strings
       message: json['message'],
       isRead: json['isRead'],
       isGroup: json['isGroup'],
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp']),
+      isImage: json['isImage'] ?? false,
+      imageUrl: json['imageUrl'],
     );
   }
 }

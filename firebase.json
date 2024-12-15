@@ -1,1 +1,33 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"novelnest-827a6","appId":"1:450436408734:android:c93b8bcac9a4bc1bb7628f","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"novelnest-827a6","configurations":{"android":"1:450436408734:android:c93b8bcac9a4bc1bb7628f","ios":"1:450436408734:ios:c52cde9188f217dab7628f","macos":"1:450436408734:ios:c52cde9188f217dab7628f","web":"1:450436408734:web:1f70ea6918539a67b7628f","windows":"1:450436408734:web:0bdf91904c9ec007b7628f"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "novelnest-827a6",
+          "appId": "1:450436408734:android:c93b8bcac9a4bc1bb7628f",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "novelnest-827a6",
+          "configurations": {
+            "android": "1:450436408734:android:c93b8bcac9a4bc1bb7628f",
+            "ios": "1:450436408734:ios:c52cde9188f217dab7628f",
+            "macos": "1:450436408734:ios:c52cde9188f217dab7628f",
+            "web": "1:450436408734:web:1f70ea6918539a67b7628f",
+            "windows": "1:450436408734:web:0bdf91904c9ec007b7628f"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
