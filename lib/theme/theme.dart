@@ -13,10 +13,12 @@ class AppTheme {
   static const Color backgroundColorLight = Color(0xFFF3F4F6);
   static Color backgroundColorGrey = Colors.grey[300]!;
   static const Color backgroundColorDark = Color(0xFF1C1C1E);
-  static const Color surfaceColorLight = Color(0xFFFAFAFA); // Slightly off-white
+  static const Color surfaceColorLight =
+      Color(0xFFFAFAFA); // Slightly off-white
   static const Color surfaceColorDark = Color(0xFF2C2C2E);
   static const Color textColorLight = Color(0xFF212121);
-  static const Color textColorDark = Color(0xFFE1E1E1); // Slightly off-white for better readability
+  static const Color textColorDark =
+      Color(0xFFD8D8D8); // More off-white for better readability
   static const TextStyle appBarTitleStyle = TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.w600,
@@ -72,14 +74,14 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: backgroundColorLight,
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: surfaceColorLight,
         foregroundColor: primaryColor,
         centerTitle: true,
         titleTextStyle: appBarTitleStyle,
       ),
       textTheme: _buildTextTheme(textColorLight),
       cardTheme: CardTheme(
-        elevation: 1,
+        elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColorLight,
       ),
@@ -91,7 +93,11 @@ class AppTheme {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 0.5),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -195,7 +201,7 @@ class AppTheme {
       ),
       textTheme: _buildTextTheme(textColorDark),
       cardTheme: CardTheme(
-        elevation: 1,
+        elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColorDark,
         shadowColor: Colors.grey.shade600,
@@ -208,7 +214,12 @@ class AppTheme {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           backgroundColor: primaryColor.withOpacity(0.7),
           foregroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -305,7 +316,7 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: backgroundColorLight,
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: surfaceColorLight,
         foregroundColor: primaryColor,
         centerTitle: true,
         titleTextStyle: appBarTitleStyle,
@@ -320,10 +331,16 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -436,10 +453,16 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           backgroundColor: primaryColor.withOpacity(0.7),
           foregroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -532,7 +555,11 @@ class AppTheme {
           fontSize: 18, fontWeight: FontWeight.w600, color: textColor),
       titleLarge: TextStyle(
           fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
-      bodyLarge: TextStyle(fontSize: 16, color: textColor),
+      bodyLarge: TextStyle(
+          fontSize: 16,
+          color: textColor,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5),
       bodyMedium: TextStyle(fontSize: 14, color: textColor),
       labelLarge: TextStyle(
           fontSize: 14, fontWeight: FontWeight.w600, color: textColor),
@@ -564,8 +591,8 @@ class ContainerTheme extends ThemeExtension<ContainerTheme> {
       return this;
     }
     return ContainerTheme(
-      decoration: BoxDecoration.lerp(decoration, other.decoration, t) ??
-          decoration,
+      decoration:
+          BoxDecoration.lerp(decoration, other.decoration, t) ?? decoration,
     );
   }
 }

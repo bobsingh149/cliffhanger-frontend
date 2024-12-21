@@ -1,8 +1,13 @@
+import 'package:barter_frontend/models/post.dart';
+import 'package:barter_frontend/provider/post_provider.dart';
 import 'package:barter_frontend/theme/theme.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
 enum SnackbarMode {
   success,
@@ -47,64 +52,44 @@ class CommonUtils {
     return DateFormat('HH:mm').format(dateTime);
   }
 
-  static void displaySnackbar(
-      {required BuildContext context,
-      required String message,
-      SnackbarMode mode = SnackbarMode.error}) {
-    Color backgroundColor;
-    Color borderColor;
-    Color textColor;
+  static void displaySnackbar({
+    required BuildContext context,
+    required String message,
+    SnackbarMode mode = SnackbarMode.error,
+  }) {
+    ContentType contentType;
+    String title;
 
     switch (mode) {
       case SnackbarMode.success:
-        backgroundColor = Colors.green;
-        borderColor = Colors.white;
-        textColor = Colors.white;
+        contentType = ContentType.success;
+        title = 'Success';
         break;
       case SnackbarMode.error:
-        backgroundColor = AppTheme.secondaryColor;
-        borderColor = Colors.white;
-        textColor = Colors.white;
+        contentType = ContentType.failure;
+        title = 'Error';
         break;
       case SnackbarMode.info:
-        backgroundColor = Colors.blue;
-        borderColor = Colors.white;
-        textColor = Colors.white;
+        contentType = ContentType.help;
+        title = 'Info';
         break;
     }
 
     final snackBar = SnackBar(
-      content: Row(
-        children: [
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.close, color: textColor, size: 20),
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-          ),
-        ],
+      elevation: 0,
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.transparent,
+      content: AwesomeSnackbarContent(
+        title: title,
+        message: message,
+        contentType: contentType,
+        inMaterialBanner: false,
       ),
-      width: kIsWeb ? 370 : null,
-      backgroundColor: backgroundColor,
-      behavior: kIsWeb ? SnackBarBehavior.floating : SnackBarBehavior.fixed,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(kIsWeb ? 5 : 7),
-      ),
-      duration: const Duration(seconds: 4),
-      elevation: kIsWeb ? 6 : 0,
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(snackBar);
   }
 
   static String formatDateOnly(DateTime date) {
@@ -123,4 +108,7 @@ class CommonUtils {
       return DateFormat('MMMM d, y').format(date);
     }
   }
+
+
+  
 }

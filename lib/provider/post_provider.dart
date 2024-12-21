@@ -22,7 +22,8 @@ class PostProvider with ChangeNotifier {
     return _proflePosts;
   }
 
-  Future<Map<PostCategory, List<PostModel>>?> getUserPosts(String userId) async {
+  Future<Map<PostCategory, List<PostModel>>?> getUserPosts(
+      String userId) async {
     try {
       _proflePosts = {};
       for (var category in postCategoryList) {
@@ -30,7 +31,7 @@ class PostProvider with ChangeNotifier {
       }
 
       final posts = await _postService.getPostsByUser(userId);
-      
+
       for (var post in posts) {
         _proflePosts![post.category]!.add(post);
       }
@@ -42,7 +43,6 @@ class PostProvider with ChangeNotifier {
     }
   }
 
-
   Future<List<PostModel>> getFeedPosts({
     required FilterType filterType,
     required String userId,
@@ -50,11 +50,10 @@ class PostProvider with ChangeNotifier {
     required int size,
     String? searchQuery,
     String? city,
+    String? userIdPosts,
   }) async {
     try {
-      
-  
-    List<PostModel> newPosts;
+      List<PostModel> newPosts;
       switch (filterType) {
         case FilterType.all:
           newPosts = await _postService.getAllPosts(
@@ -64,13 +63,17 @@ class PostProvider with ChangeNotifier {
             filterType: filterType,
           );
           break;
-          
+
         case FilterType.userPosts:
-          newPosts = await _postService.getPostsByUser(userId);
+
+          if (userIdPosts == null) throw Exception('User ID is required');
+        
+          newPosts = await _postService.getPostsByUser(userIdPosts!);
           break;
-          
+
         case FilterType.barter:
-          if (city == null) throw Exception('City is required for barter filter');
+          if (city == null)
+            throw Exception('City is required for barter filter');
           newPosts = await _postService.getBarterPosts(
             userId,
             city: city,
@@ -78,7 +81,7 @@ class PostProvider with ChangeNotifier {
             size: size,
           );
           break;
-          
+
         case FilterType.search:
           if (searchQuery == null) throw Exception('Search query is required');
           newPosts = await _postService.searchPosts(
@@ -93,7 +96,6 @@ class PostProvider with ChangeNotifier {
       }
 
       return newPosts;
-      
     } catch (err) {
       _logger.e(err);
       rethrow;
@@ -110,8 +112,7 @@ class PostProvider with ChangeNotifier {
     }
   }
 
-
-  Future<void>  likePost(String postId) async {
+  Future<void> likePost(String postId) async {
     try {
       final userId = AuthService.getInstance.currentUser?.uid;
       if (userId == null) throw Exception('User not authenticated');
@@ -123,8 +124,7 @@ class PostProvider with ChangeNotifier {
     }
   }
 
-  
-   Future<void> addComment(String postId, String comment) async {
+  Future<void> addComment(String postId, String comment) async {
     try {
       final userId = AuthService.getInstance.currentUser?.uid;
       if (userId == null) throw Exception('User not authenticated');
@@ -146,5 +146,4 @@ class PostProvider with ChangeNotifier {
       rethrow;
     }
   }
-  
 }

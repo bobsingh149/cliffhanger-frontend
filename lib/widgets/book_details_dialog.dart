@@ -106,7 +106,7 @@ class BookDetailsDialog extends StatelessWidget {
                     // Description section
                     Text(
                       'Description',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -118,13 +118,13 @@ class BookDetailsDialog extends StatelessWidget {
                         expandText: 'Read more',
                         maxLines: 4,
                         linkColor: Theme.of(context).primaryColor,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           height: 1.5,
                         ),
                       ),
                       expanded: Text(
                         userBook.description ?? 'No description available',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           height: 1.5,
                         ),
                       ),

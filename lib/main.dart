@@ -15,11 +15,13 @@ import 'package:barter_frontend/screens/user_onboarding.dart';
 import 'package:barter_frontend/screens/profile.dart';
 import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
+import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:introduction_screen/introduction_screen.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:barter_frontend/screens/contacts_screen.dart';
@@ -28,6 +30,8 @@ import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/screens/create_group_screen.dart';
 import 'package:barter_frontend/screens/link_screen.dart';
+import 'package:barter_frontend/screens/introduction.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.dark;
@@ -78,7 +82,7 @@ class BarterApp extends StatelessWidget {
             builder: (context, themeProvider, _) {
               return MaterialApp(
                 debugShowCheckedModeBanner: false,
-                title: 'Flutter Demo',
+                title: 'Cliffhanger',
                 theme: AppTheme.getAppropriateLightTheme(),
                 darkTheme: AppTheme.getAppropriateDarkTheme(),
                 themeMode: themeProvider.themeMode,
@@ -114,6 +118,21 @@ class AuthCheck extends StatefulWidget {
 }
 
 class _AuthCheckState extends State<AuthCheck> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<bool> _checkNewUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool isNewUser = !prefs.containsKey("introduction_done");
+    if (isNewUser) {	
+      await prefs.setBool('introduction_done', true);
+    }
+    return isNewUser;
+  }
+
   Widget _getTargetRoute() {
     // First, check if the route is public
     if (widget.targetRoute == LinksPage.routePath) {
@@ -122,6 +141,8 @@ class _AuthCheckState extends State<AuthCheck> {
 
     // Then handle authenticated routes
     switch (widget.targetRoute) {
+      case AppIntroductionScreen.routePath:
+        return const AppIntroductionScreen();
       case MainScreen.routePath:
         return MainScreen();
       case HomePage.routePath:
@@ -135,33 +156,15 @@ class _AuthCheckState extends State<AuthCheck> {
       case PostBookPage.routePath:
         return PostBookPage();
       case ConnectionRequestsPage.routePath:
-        return const ConnectionRequestsPage();
+        return ConnectionRequestsPage();
       case ContactsScreen.routePath:
         return ContactsScreen();
       case EditProfilePage.routePath:
-        return const EditProfilePage();
-      case ChatScreen.routePath:
-        // final args = widget.arguments as Map<String, dynamic>?;
-        final dummyContact = ContactModel(
-          conversationId: 'dummy-id',
-          isGroup: false,
-          users: [
-            UserModel(
-              id: 'dummy-user',
-              name: 'Test User',
-              bookBuddyCount: 6,
-              profileImage:
-                  'https://res.cloudinary.com/dllr1e6gn/image/upload/v1/profile_images/aemio6hooqxp1eiqzpev',
-            )
-          ],
-          lastMessage: 'Welcome to chat!',
-          lastMessageTime: DateTime.now(),
-        );
-        return ChatScreen(contact: dummyContact);
+        return EditProfilePage();
       case CreateGroupScreen.routePath:
-        return const CreateGroupScreen();
+        return CreateGroupScreen();
       default:
-        return const MainScreen(); // Default fallback
+        return MainScreen(); // Default fallback
     }
   }
 
@@ -174,14 +177,29 @@ class _AuthCheckState extends State<AuthCheck> {
 
     return FutureBuilder<User?>(
       future: FirebaseAuth.instance.authStateChanges().first,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+      builder: (context, authSnapshot) {
+        if (authSnapshot.connectionState == ConnectionState.waiting) {
           return CommonWidget.getLoader();
         }
 
-        // If user is not signed in, always redirect to SignInPage
-        if (!snapshot.hasData || snapshot.data == null) {
-          return const SignInPage();
+        // If user is not signed in
+        if (!authSnapshot.hasData || authSnapshot.data == null) {
+          return FutureBuilder<bool>(
+            future: _checkNewUser(),
+            builder: (context, newUserSnapshot) {
+              if (newUserSnapshot.connectionState == ConnectionState.waiting) {
+                return CommonWidget.getLoader();
+              }
+              AppLogger.instance.i("newUserSnapshot.data: ${newUserSnapshot.data}");
+              // If new user, show introduction screen
+              if (newUserSnapshot.data == true) {
+                return const AppIntroductionScreen();
+              }
+
+              // Otherwise show sign in page
+              return const SignInPage();
+            },
+          );
         }
 
         // If user is signed in, navigate to the requested route

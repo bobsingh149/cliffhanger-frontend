@@ -13,13 +13,13 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:image_picker_web/image_picker_web.dart'
-    if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
+if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
 
 class ChatScreen extends StatefulWidget {
   static const routePath = '/chat';
   final ContactModel contact;
 
-  const ChatScreen({
+  ChatScreen({
     Key? key,
     required this.contact,
   }) : super(key: key);
@@ -54,7 +54,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     Expanded(
                         child: StreamBuilder<List<ChatModel>>(
-                            stream: _provider!.getMessages(""),
+                            stream: _provider!
+                                .getMessages(widget.contact.conversationId),
                             builder: (context, snapshot) {
                               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                                 return const SizedBox.shrink();
@@ -82,14 +83,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                   List<ChatModel> dayMessages =
                                       groupedMessages[dateKey]!;
 
+                                  // Sort messages within the date group (oldest to newest)
+                                  dayMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
                                   return Column(
                                     children: [
                                       _buildDateHeader(dateKey),
                                       ...dayMessages.map((message) {
-                                        final isMe = message.from !=
-                                            AuthService
-                                                .getInstance.currentUser!.uid;
-                                        return _buildChatBubble(message, isMe);
+                                        return _buildChatBubble(message);
                                       }).toList(),
                                     ],
                                   );
@@ -105,7 +106,10 @@ class _ChatScreenState extends State<ChatScreen> {
         ));
   }
 
-  Widget _buildChatBubble(ChatModel chatMessage, bool isMe) {
+  Widget _buildChatBubble(ChatModel chatMessage) {
+    // Determine if the message is sent by the current user
+    final bool isMe = chatMessage.from == AuthService.getInstance.currentUser!.uid;
+
     final DateTime timestamp = chatMessage.timestamp;
     Widget? senderInfo;
     if (widget.contact.isGroup && !isMe) {
@@ -148,10 +152,13 @@ class _ChatScreenState extends State<ChatScreen> {
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 5.h),
-        padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(
+          horizontal: chatMessage.isImage ? 5.w : 15.w,
+          vertical: chatMessage.isImage ? 5.h : 10.h,
+        ),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.7,
-          maxHeight: chatMessage.isImage ? 200.h : double.infinity,
+          maxHeight: chatMessage.isImage ? 260.h : double.infinity,
         ),
         decoration: BoxDecoration(
           color: isMe
@@ -162,8 +169,8 @@ class _ChatScreenState extends State<ChatScreen> {
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
             topRight: const Radius.circular(20),
-            bottomLeft: isMe ? const Radius.circular(20) : Radius.zero,
-            bottomRight: isMe ? Radius.zero : const Radius.circular(20),
+            bottomLeft: isMe ? Radius.zero : const Radius.circular(20),
+            bottomRight: isMe ? const Radius.circular(20) : Radius.zero,
           ),
           boxShadow: const [
             BoxShadow(
@@ -183,6 +190,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: CachedNetworkImage(
+                  height: 250.h,
                   imageUrl: chatMessage.imageUrl!,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => const Center(
@@ -324,13 +332,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendImageMessage(Uint8List imageData) async {
     await _provider!.sendImageMessage(
-        ChatModel(
+        chatModel: ChatModel(
             from: AuthService.getInstance.currentUser!.uid,
             message: _messageController.text.trim(),
             isImage: true,
             timestamp: DateTime.now()),
-        widget.contact.conversationId,
-        imageData);
+        chatId: widget.contact.conversationId,
+        imageData: imageData);
   }
 
   Widget _buildDateHeader(String date) {

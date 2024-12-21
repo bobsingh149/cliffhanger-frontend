@@ -94,7 +94,7 @@ class PostModel extends Book {
   final DateTime createdAt;
   final List<String> likes;
   final int likesCount;
-  final int commentCount;
+  int commentCount;
   final String? description;
 
   PostModel({
