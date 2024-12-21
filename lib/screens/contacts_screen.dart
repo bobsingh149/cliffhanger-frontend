@@ -15,7 +15,7 @@ import 'package:barter_frontend/utils/common_decoration.dart';
 class ContactsScreen extends StatefulWidget {
   static const String routePath = '/contacts';
 
-  const ContactsScreen({Key? key}) : super(key: key);
+  ContactsScreen({Key? key}) : super(key: key);
 
   @override
   State<ContactsScreen> createState() => _ContactsScreenState();
@@ -32,7 +32,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
         automaticallyImplyLeading: false,
         title: Text(
           'Contacts',
-        
         ),
         centerTitle: true,
         actions: [
@@ -77,12 +76,13 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 // await Provider.of<UserProvider>(context, listen: false).getConnections(forceRefresh: true);
               },
               child: FutureBuilder<List<ContactModel>>(
-                future: Provider.of<UserProvider>(context, listen: false).getConnections(),
+                future: Provider.of<UserProvider>(context, listen: false)
+                    .getAllContacts(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CommonWidget.getLoader();
                   }
-        
+
                   if (snapshot.hasError) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       CommonUtils.displaySnackbar(
@@ -93,13 +93,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
                     });
                     return const SizedBox.shrink();
                   }
-        
+
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Center(child: Text('No contacts found'));
                   }
-        
+
                   return ListView.builder(
-                 
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final contact = snapshot.data![index];
@@ -163,8 +162,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
             if (contact.lastMessageTime != null)
               Text(
                 CommonUtils.formatDateTime(contact.lastMessageTime!),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(),
               ),
             SizedBox(height: 4.h),
             Icon(
@@ -174,10 +172,11 @@ class _ContactsScreenState extends State<ContactsScreen> {
           ],
         ),
         onTap: () {
-          Navigator.pushNamed(
+          Navigator.push(
             context,
-            ChatScreen.routePath,
-            arguments: contact,
+            MaterialPageRoute(
+              builder: (context) => ChatScreen(contact: contact),
+            ),
           );
         },
       ),

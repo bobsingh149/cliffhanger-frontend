@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:barter_frontend/constants/api_constants.dart';
 import 'package:barter_frontend/models/chat.dart';
+import 'package:barter_frontend/models/user_setup.dart';
+import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:barter_frontend/utils/http_client.dart';
 import 'package:barter_frontend/utils/service_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -75,47 +77,39 @@ class ChatService {
 
     final responseBody = await http.Response.fromStream(response);
 
-
-    if (response.statusCode != 201) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(responseBody));
     }
-      
-    return ServiceUtils.parseResponse(responseBody);
+
+  return ServiceUtils.parseResponse(responseBody);
+    
+    
   }
 
-  Future<Map<String, ChatModel>> getLatestMessages() async {
-    Map<String, ChatModel> chatMessages = {};
+  Future<Map<String, ChatModel>> getLatestMessages(List<ConversationModel> conversationModels) async {
+    Map<String, ChatModel> latestMessages = {};
     
-    try {
-      // Get all chat documents
-      QuerySnapshot chatSnapshot = await _firestore.collection('chats').get();
-      
-      // For each chat document
-      for (var chatDoc in chatSnapshot.docs) {
-        String chatId = chatDoc.id;
-        
-        // Get the latest message
-        QuerySnapshot messageSnapshot = await _firestore
+    for (var conversation in conversationModels) {
+      try {
+        final querySnapshot = await _firestore
             .collection('chats')
-            .doc(chatId)
+            .doc(conversation.conversationId)
             .collection('messages')
-            .orderBy('timestamp', descending: true)
-            .limit(1)
+            .orderBy('timestamp', descending: true) // Get newest message first
+            .limit(1) // Only get the latest message
             .get();
 
-        if (messageSnapshot.docs.isNotEmpty) {
-          ChatModel latestMessage = ChatModel.fromJson(
-              messageSnapshot.docs.first.data() as Map<String, dynamic>);
-          // Store the entire ChatModel object instead of just the message text
-          chatMessages[chatId] = latestMessage;
+        if (querySnapshot.docs.isNotEmpty) {
+          final latestMessage = ChatModel.fromJson(
+              querySnapshot.docs.first.data() as Map<String, dynamic>);
+          latestMessages[conversation.conversationId] = latestMessage;
         }
-      }
-      
-      return chatMessages;
-    } catch (e) {
-      print('Error getting latest messages: $e');
-      return {};
+      } catch (e) {
+        AppLogger.instance.e("Error fetching latest message for conversation ${conversation.conversationId}: $e");
+        }
     }
+    
+    return latestMessages;
   }
 
 }

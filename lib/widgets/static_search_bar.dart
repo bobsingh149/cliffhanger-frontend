@@ -38,7 +38,19 @@ class _StaticSearchbarState extends State<StaticSearchbar> {
     super.initState();
     if (widget.initialValue != null) {
       _selectedCity = widget.initialValue;
-      _controller.text = _selectedCity!;
+      _controller.text = widget.initialValue!;
+    }
+  }
+
+  @override
+  void didUpdateWidget(StaticSearchbar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != null &&
+        widget.initialValue != _controller.text) {
+      setState(() {
+        _selectedCity = widget.initialValue;
+        _controller.text = widget.initialValue!;
+      });
     }
   }
 
@@ -93,10 +105,11 @@ class _StaticSearchbarState extends State<StaticSearchbar> {
             width: size.width,
             child: Material(
               elevation: 2,
-              child: GestureDetector(
+              child: InkWell(
                 onTap: () {}, // Prevent taps on the dropdown from closing it
                 child: Container(
-                  constraints: BoxConstraints(minHeight: 230.h, maxHeight: 230.h),
+                  constraints:
+                      BoxConstraints(minHeight: 230.h, maxHeight: 230.h),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(10),
@@ -141,7 +154,7 @@ class _StaticSearchbarState extends State<StaticSearchbar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
+        InkWell(
           key: _textFieldKey,
           child: TextField(
             controller: _controller,

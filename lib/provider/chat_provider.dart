@@ -35,7 +35,7 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
-  Future<void> sendImageMessage(ChatModel chatModel, String chatId, Uint8List imageData) async {
+  Future<void> sendImageMessage({required ChatModel chatModel, required String chatId, required Uint8List imageData}) async {
     try {
       chatModel.imageUrl = await uploadImage(imageData);
       return await sendMessage(chatModel, chatId);

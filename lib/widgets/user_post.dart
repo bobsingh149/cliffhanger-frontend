@@ -1,6 +1,7 @@
 import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/provider/post_provider.dart';
 import 'package:barter_frontend/utils/app_logger.dart';
+import 'package:barter_frontend/widgets/post_card.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
@@ -32,8 +33,9 @@ class _UserPostState extends State<UserPost> {
       },
       child: Card(
         margin: EdgeInsets.symmetric(
-          horizontal: kIsWeb ? 10.w : 0.w,
-          vertical: kIsWeb ? 12.h : 0.h
+            horizontal: kIsWeb ? 10.w : 0.w, vertical: kIsWeb ? 12.h : 0.h),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +43,8 @@ class _UserPostState extends State<UserPost> {
             Expanded(
               flex: 3,
               child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(kIsWeb ? 12 : 8)),
+                borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(kIsWeb ? 12 : 8)),
                 child: CachedNetworkImage(
                   imageUrl: widget.userBook.postImage ??
                       (widget.userBook.coverImages?.isNotEmpty == true
@@ -53,7 +56,8 @@ class _UserPostState extends State<UserPost> {
                     color: theme.colorScheme.surface,
                   ),
                   errorWidget: (context, url, error) {
-                    AppLogger.instance.e('Error loading image: $url', error: error);
+                    AppLogger.instance
+                        .e('Error loading image: $url', error: error);
                     return Icon(Icons.error);
                   },
                 ),
@@ -73,7 +77,8 @@ class _UserPostState extends State<UserPost> {
                             onTap: () {
                               showDialog(
                                 context: context,
-                                builder: (context) => BookDetailsDialog(userBook: widget.userBook),
+                                builder: (context) => BookDetailsDialog(
+                                    userBook: widget.userBook),
                               );
                             },
                             child: Text(
@@ -93,12 +98,14 @@ class _UserPostState extends State<UserPost> {
                             onTap: () {
                               showDialog(
                                 context: context,
-                                builder: (context) => BookDetailsDialog(userBook: widget.userBook),
+                                builder: (context) => BookDetailsDialog(
+                                    userBook: widget.userBook),
                               );
                             },
                             child: FaIcon(
                               FontAwesomeIcons.bookOpen,
-                              color: theme.colorScheme.secondary.withOpacity(0.7),
+                              color:
+                                  theme.colorScheme.secondary.withOpacity(0.7),
                               size: 16,
                             ),
                           ),
@@ -112,6 +119,27 @@ class _UserPostState extends State<UserPost> {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall,
                     ),
+                    SizedBox(height: kIsWeb ? 21.h : 10.h),
+                    Row(
+                      children: [
+                        _buildInteractionButton(
+                          icon: FontAwesomeIcons.heart,
+                          label: '${widget.userBook.likesCount}',
+                          theme: theme,
+                        ),
+                        SizedBox(width: 16.w),
+                        _buildInteractionButton(
+                          icon: FontAwesomeIcons.comment,
+                          label: '${widget.userBook.commentCount}',
+                          onTap: () {
+                            PostDetailsDialog(userBook: widget.userBook)
+                                ._showCommentsDialogForUser(
+                                    context, widget.userBook);
+                          },
+                          theme: theme,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -121,95 +149,255 @@ class _UserPostState extends State<UserPost> {
       ),
     );
   }
+
+  Widget _buildInteractionButton({
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+    required ThemeData theme,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
+          SizedBox(width: 4.w),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class PostDetailsDialog extends StatelessWidget {
   final PostModel userBook;
+  final TextEditingController _commentController = TextEditingController();
 
-  const PostDetailsDialog({Key? key, required this.userBook}) : super(key: key);
+  PostDetailsDialog({super.key, required this.userBook});
 
-  void _showCommentsDialog(BuildContext context, PostModel post) {
+  void _showCommentsDialogForUser(BuildContext context, PostModel post) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.7,
+          initialChildSize: kIsWeb ? 0.9 : 0.7,
+          minChildSize: kIsWeb ? 0.7 : 0.5,
+          maxChildSize: kIsWeb ? 0.95 : 0.7,
           expand: false,
           builder: (_, controller) {
-            return Column(
-              children: [
-                AppBar(
-                  title: Text('Comments'),
-                  automaticallyImplyLeading: false,
-                  actions: [
-                    IconButton(
-                      icon: Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: FutureBuilder<List<Comment>>(
-                    future: Provider.of<PostProvider>(context, listen: false)
-                        .getPostComments(post.id),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Error loading comments'));
-                      }
-                      final comments = snapshot.data ?? [];
-                      return ListView.builder(
-                        controller: controller,
-                        itemCount: comments.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(comments[index].userBasicInfo.name),
-                            subtitle: Text(comments[index].text),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(8.r),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Add a comment...',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      ElevatedButton(
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.9,
+              child: Column(
+                children: [
+                  AppBar(
+                    title: Text('Comments'),
+                    automaticallyImplyLeading: false,
+                    actions: [
+                      IconButton(
+                        icon: Icon(Icons.close),
                         onPressed: () {
-                          // TODO: Implement add comment functionality
+                          _commentController.clear();
+                          Navigator.pop(context);
                         },
-                        child: Text('Post'),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: post.commentCount == 0
+                        ? Center(child: Text('No comments yet'))
+                        : FutureBuilder<List<Comment>>(
+                            future: Provider.of<PostProvider>(context,
+                                    listen: false)
+                                .getPostComments(post.id),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              }
+                              if (snapshot.hasError) {
+                                return Center(
+                                    child: Text('Error loading comments'));
+                              }
+                              final comments = snapshot.data ?? [];
+                              return ListView.builder(
+                                controller: controller,
+                                itemCount: comments.length,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16.r, vertical: 8.r),
+                                itemBuilder: (context, index) {
+                                  final comment = comments[index];
+                                  return Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 8.r),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 16.r,
+                                          child: ClipOval(
+                                            child: CachedNetworkImage(
+                                              imageUrl: comment.userBasicInfo
+                                                      .profileImage ??
+                                                  'https://picsum.photos/seed/picsum/200/300',
+                                              placeholder: (context, url) =>
+                                                  CircularProgressIndicator(),
+                                              errorWidget: (context, url,
+                                                      error) =>
+                                                  Icon(Icons.person, size: 20),
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 12.w),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    comment.userBasicInfo.name,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                  ),
+                                                  Spacer(),
+                                                  Text(
+                                                      CommonUtils
+                                                          .formatDateTime(
+                                                              comment
+                                                                  .timestamp),
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall),
+                                                ],
+                                              ),
+                                              SizedBox(height: 4.h),
+                                              Text(comment.text,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall),
+                                              SizedBox(height: 8.h),
+                                              Row(
+                                                children: [
+                                                  LikeButton(
+                                                    item: comment,
+                                                    postId: post.id,
+                                                    commentId: comment.id,
+                                                    onLikeChanged:
+                                                        (newLikeCount) {
+                                                      // TODO: Implement comment like functionality
+                                                    },
+                                                    isComment: true,
+                                                  ),
+                                                  SizedBox(width: 16.w),
+                                                  Text(
+                                                    'Reply',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color:
+                                                              Colors.grey[600],
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8.r).copyWith(
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 8.r,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _commentController,
+                            decoration: InputDecoration(
+                              hintText: 'Add a comment...',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (_commentController.text.trim().isEmpty) return;
+
+                            try {
+                              await Provider.of<PostProvider>(context,
+                                      listen: false)
+                                  .addComment(
+                                      post.id, _commentController.text.trim());
+
+                              // Increment comment count
+                              post.commentCount++;
+
+                              // Clear the input field
+                              _commentController.clear();
+
+                              // Close keyboard
+                              FocusScope.of(context).unfocus();
+                            } catch (e) {
+                              if (context.mounted) {
+                                CommonUtils.displaySnackbar(
+                                  context: context,
+                                  message: 'Failed to add comment',
+                                  mode: SnackbarMode.error,
+                                );
+                              }
+                            }
+                          },
+                          child: Text('Post'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         );
       },
-    );
+    ).whenComplete(() {
+      _commentController.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -241,10 +429,13 @@ class PostDetailsDialog extends StatelessWidget {
                   Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(24)),
                         child: CachedNetworkImage(
-                          imageUrl: userBook.postImage ?? 
-                              (userBook.coverImages?.isNotEmpty == true ? userBook.coverImages![2] : ''),
+                          imageUrl: userBook.postImage ??
+                              (userBook.coverImages?.isNotEmpty == true
+                                  ? userBook.coverImages![2]
+                                  : ''),
                           width: double.infinity,
                           height: 0.45.sh,
                           fit: BoxFit.cover,
@@ -252,7 +443,8 @@ class PostDetailsDialog extends StatelessWidget {
                             color: theme.colorScheme.surfaceVariant,
                           ),
                           errorWidget: (context, url, error) => Center(
-                            child: Icon(Icons.error, size: 50.r, color: theme.colorScheme.error),
+                            child: Icon(Icons.error,
+                                size: 50.r, color: theme.colorScheme.error),
                           ),
                         ),
                       ),
@@ -297,7 +489,8 @@ class PostDetailsDialog extends StatelessWidget {
                             Text(
                               CommonUtils.formatDateTime(userBook.createdAt),
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.6),
                               ),
                             ),
                           ],
@@ -306,7 +499,7 @@ class PostDetailsDialog extends StatelessWidget {
                         // Caption
                         Text(
                           userBook.caption,
-                          style: theme.textTheme.bodyLarge?.copyWith(
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             height: 1.5,
                           ),
                         ),
@@ -323,7 +516,8 @@ class PostDetailsDialog extends StatelessWidget {
                             _buildInteractionButton(
                               icon: FontAwesomeIcons.comment,
                               label: '${userBook.commentCount}',
-                              onTap: () => _showCommentsDialog(context, userBook),
+                              onTap: () =>
+                                  _showCommentsDialogForUser(context, userBook),
                               theme: theme,
                             ),
                           ],

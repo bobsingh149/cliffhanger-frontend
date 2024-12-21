@@ -32,7 +32,6 @@ class WebSocketService {
       onConnect: onConnect,
       beforeConnect: () async {
         print('waiting to connect...');
-        await Future.delayed(const Duration(milliseconds: 200));
         print('connecting...');
       },
       onWebSocketError: (dynamic error) => print(error.toString()),

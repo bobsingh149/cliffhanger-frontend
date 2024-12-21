@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:barter_frontend/constants/api_constants.dart';
 import 'package:barter_frontend/models/post.dart';
-import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:barter_frontend/utils/http_client.dart';
 import 'package:barter_frontend/utils/service_utils.dart';
 import 'package:http/http.dart' as http;
@@ -25,11 +24,12 @@ class PostService {
     final response = await client
         .get(Uri.parse("${ApiRoutePaths.bookUrl}/getProductByUserId/$userId"));
     
-    if (response.statusCode == 200) {
-      final List<dynamic> data = ServiceUtils.parseResponse(response);
-      return data.map((json) => PostModel.fromJson(json)).toList();
+    if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     }
-    throw Exception(ServiceUtils.parseErrorMessage(response));
+    
+    final List<dynamic> data = ServiceUtils.parseResponse(response);
+    return data.map((json) => PostModel.fromJson(json)).toList();
   }
 
   Future<List<PostModel>> getAllPosts(String userId, {
@@ -46,11 +46,12 @@ class PostService {
       ),
     );
     
-    if (response.statusCode == 200) {
-      final List<dynamic> data = ServiceUtils.parseResponse(response);
-      return data.map((json) => PostModel.fromJson(json)).toList();
+    if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     }
-    throw Exception(ServiceUtils.parseErrorMessage(response));
+    
+    final List<dynamic> data = ServiceUtils.parseResponse(response);
+    return data.map((json) => PostModel.fromJson(json)).toList();
   }
 
   Future<List<PostModel>> getBarterPosts(String userId, {
@@ -69,11 +70,12 @@ class PostService {
       ),
     );
     
-    if (response.statusCode == 200) {
-      final List<dynamic> data = ServiceUtils.parseResponse(response);
-      return data.map((json) => PostModel.fromJson(json)).toList();
+    if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     }
-    throw Exception(ServiceUtils.parseErrorMessage(response));
+    
+    final List<dynamic> data = ServiceUtils.parseResponse(response);
+    return data.map((json) => PostModel.fromJson(json)).toList();
   }
 
   Future<List<PostModel>> searchPosts(String userId, {
@@ -92,11 +94,12 @@ class PostService {
       ),
     );
     
-    if (response.statusCode == 200) {
-      final List<dynamic> data = ServiceUtils.parseResponse(response);
-      return data.map((json) => PostModel.fromJson(json)).toList();
+    if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     }
-    throw Exception(ServiceUtils.parseErrorMessage(response));
+    
+    final List<dynamic> data = ServiceUtils.parseResponse(response);
+    return data.map((json) => PostModel.fromJson(json)).toList();
   }
 
   Future<PostModel> getPostById(String postId) async {
@@ -104,10 +107,11 @@ class PostService {
       Uri.parse("${ApiRoutePaths.bookUrl}/getProductById/$postId"),
     );
     
-    if (response.statusCode == 200) {
-      return PostModel.fromJson(ServiceUtils.parseResponse(response));
+    if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     }
-    throw Exception(ServiceUtils.parseErrorMessage(response));
+    
+    return PostModel.fromJson(ServiceUtils.parseResponse(response));
   }
 
   Future<void> deletePost(String postId) async {
@@ -115,7 +119,7 @@ class PostService {
       Uri.parse("${ApiRoutePaths.bookUrl}/deleteProductById/$postId"),
     );
     
-    if (response.statusCode != 200) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
@@ -143,10 +147,9 @@ class PostService {
     final streamedResponse = await client.send(request);
     final response = await http.Response.fromStream(streamedResponse);
     
-    if (response.statusCode == 201) {
-      return;
+    if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     }
-    throw Exception(ServiceUtils.parseErrorMessage(response));
   }
 
   Future<void> postComment(String postId, String userId, String comment) async {
@@ -160,7 +163,7 @@ class PostService {
       headers: {'Content-Type': 'application/json'},
     );
     
-    if (response.statusCode != 201) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
@@ -175,7 +178,7 @@ class PostService {
       headers: {'Content-Type': 'application/json'},
     );
     
-    if (response.statusCode != 201) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
@@ -190,7 +193,7 @@ class PostService {
       ),
     );
     
-    if (response.statusCode != 200) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
@@ -200,11 +203,11 @@ class PostService {
       Uri.parse('${ApiRoutePaths.getComments}/$postId'),
     );
 
-    if (response.statusCode == 200) {
-      final List<dynamic> commentsJson =ServiceUtils.parseResponse(response);
-      return commentsJson.map((json) => Comment.fromJson(json)).toList();
-    } else {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
+    
+    final List<dynamic> commentsJson = ServiceUtils.parseResponse(response);
+    return commentsJson.map((json) => Comment.fromJson(json)).toList();
   }
 }

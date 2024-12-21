@@ -8,6 +8,7 @@ class ContactModel {
   final DateTime? lastMessageTime;
   final String? groupName;
   final String? groupImage;
+  final UserModel? userResponse;
 
   ContactModel({
     required this.conversationId,
@@ -17,10 +18,11 @@ class ContactModel {
     this.lastMessageTime,
     this.groupName,
     this.groupImage,
+    this.userResponse,
   });
 
   factory ContactModel.fromJson(Map<String, dynamic> json) {
-    return ContactModel(
+    ContactModel contact = ContactModel(
       conversationId: json['id'],
       isGroup: json['isGroup'] ?? false,
       users: (json['users'] as List?)
@@ -33,7 +35,14 @@ class ContactModel {
           : null,
       groupName: json['groupName'],
       groupImage: json['groupImage'],
+      userResponse: json['userResponse'] != null
+          ? UserModel.fromJson(json['userResponse'])
+          : null,
     );
+    if (contact.userResponse != null) {
+      contact.users.add(contact.userResponse!);
+    }
+    return contact;
   }
 
   Map<String, dynamic> toJson() {
@@ -45,6 +54,7 @@ class ContactModel {
       'lastMessageTime': lastMessageTime?.toIso8601String(),
       'groupName': groupName,
       'groupImage': groupImage,
+      'userResponse': userResponse?.toJson(),
     };
   }
 
@@ -52,14 +62,14 @@ class ContactModel {
     if (isGroup) {
       return groupName ?? 'Unnamed Group';
     }
-    return users.isNotEmpty ? users[0].name : 'Unknown User';
+    return userResponse?.name ?? 'Unknown User';
   }
 
   String? getDisplayImage() {
     if (isGroup) {
       return groupImage;
     }
-    return users.isNotEmpty ? users[0].profileImage : null;
+    return userResponse?.profileImage;
   }
 }
 

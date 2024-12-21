@@ -16,10 +16,11 @@ import 'package:provider/provider.dart';
 import 'package:barter_frontend/main.dart'; // For ThemeProvider
 import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
+import 'package:barter_frontend/screens/link_screen.dart';
 
 class MainScreen extends StatefulWidget {
   static const routePath = 'home';
-  const MainScreen({Key? key}) : super(key: key);
+  MainScreen({Key? key}) : super(key: key);
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -27,28 +28,29 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  final List<bool> _loadedPages = List.generate(6, (index) => index == 0);
+  final List<bool> _loadedPages = List.generate(7, (index) => index == 0);
 
-  // Modify the web widget options to use lazy loading
+  // Modify the web widget options to include LinksPage
   List<Widget> get _webWidgetOptions => [
-    _loadedPages[0] ? const KeepAlivePage(child: HomePage()) : Container(),
-    _loadedPages[1] ? const KeepAlivePage(child: PostBookPage()) : Container(),
-    _loadedPages[2] ? const KeepAlivePage(child: ContactsScreen()) : Container(),
-    _loadedPages[3] ? const BookBuddiesScreen() : Container(),
-    _loadedPages[4] ? const ConnectionRequestsPage() : Container(),
-    _loadedPages[5] ? KeepAlivePage(child: ProfilePage(userId: AuthService.getInstance.currentUser!.uid)) : Container(),
+    _loadedPages[0] ?  KeepAlivePage(child: HomePage()) : Container(),
+    _loadedPages[1] ?  const KeepAlivePage(child: PostBookPage()) : Container(),
+    _loadedPages[2] ?  ContactsScreen() : Container(),
+    _loadedPages[3] ?  BookBuddiesScreen() : Container(),
+    _loadedPages[4] ?  ConnectionRequestsPage() : Container(),
+    _loadedPages[5] ? ProfilePage(userId: AuthService.getInstance.currentUser!.uid) : Container(),
+    _loadedPages[6] ? const LinksPage() : Container(),
   ];
 
   // Update _mobileWidgetOptions to be a getter with lazy loading
   List<Widget> get _mobileWidgetOptions => [
-    _loadedPages[0] ? const KeepAlivePage(child: HomePage()) : Container(),
-    _loadedPages[1] ? const KeepAlivePage(child: PostBookPage()) : Container(),
-    _loadedPages[2] ? const KeepAlivePage(child: ContactsScreen()) : Container(),
-    _loadedPages[3] ? const BookBuddiesScreen() : Container(),
-    _loadedPages[4] ? KeepAlivePage(child: ProfilePage(userId: AuthService.getInstance.currentUser!.uid)) : Container(),
+    _loadedPages[0] ?  KeepAlivePage(child: HomePage()) : Container(),
+    _loadedPages[1] ?  const KeepAlivePage(child: PostBookPage()) : Container(),
+    _loadedPages[2] ?  ContactsScreen() : Container(),
+    _loadedPages[3] ?  BookBuddiesScreen() : Container(),
+    _loadedPages[4] ? ProfilePage(userId: AuthService.getInstance.currentUser!.uid) : Container(),
   ];
 
-  // Web navigation items
+  // Update web navigation items to include Get App
   final List<NavigationItem> _webNavigationItems = [
     NavigationItem(
       icon: FontAwesomeIcons.house,
@@ -69,6 +71,10 @@ class _MainScreenState extends State<MainScreen> {
     NavigationItem(
       icon: FontAwesomeIcons.userPlus,
       label: 'Connection Requests',
+    ),
+    NavigationItem(
+      icon: FontAwesomeIcons.download,
+      label: 'Get App',
     ),
   ];
 
@@ -109,7 +115,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final userProvider = Provider.of<UserProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context,listen: true);
 
     if (kIsWeb) {
       return Scaffold(

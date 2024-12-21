@@ -1,7 +1,7 @@
 class SaveConversationInput {
   final String? conversationId;
   final bool isGroup;
-  final List<String> users;
+  final List<String> members;
   final String? userId;
   final String? groupName;
   final String? groupImage;
@@ -9,7 +9,7 @@ class SaveConversationInput {
   SaveConversationInput({
     this.conversationId,
     required this.isGroup,
-    this.users = const [],
+    this.members = const [],
     this.userId,
     this.groupName,
     this.groupImage,
@@ -18,7 +18,7 @@ class SaveConversationInput {
   Map<String, dynamic> toJson() => {
     'conversationId': conversationId,
     'isGroup': isGroup,
-    'users': users,
+    'members': members,
     'userId': userId,
     'groupName': groupName,
     'groupImage': groupImage,

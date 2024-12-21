@@ -1,10 +1,13 @@
+import 'package:barter_frontend/models/save_conversation_input.dart';
+import 'package:barter_frontend/models/save_request_input.dart';
 import 'package:barter_frontend/models/user.dart';
+import 'package:barter_frontend/screens/profile.dart';
+import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
@@ -13,7 +16,7 @@ import 'package:barter_frontend/utils/common_decoration.dart';
 
 class ConnectionRequestsPage extends StatefulWidget {
   static const String routePath = "/connection-requests";
-  const ConnectionRequestsPage({super.key});
+   ConnectionRequestsPage({super.key});
 
   @override
   State<ConnectionRequestsPage> createState() => _ConnectionRequestsPageState();
@@ -53,7 +56,7 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
                 maxWidth: kIsWeb ? 800.w : double.infinity,
               ),
               child: FutureBuilder<List<RequestModel>>(
-                future: Provider.of<UserProvider>(context, listen: false)
+                future: Provider.of<UserProvider>(context, listen: true)
                     .getRequests(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -92,6 +95,7 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
                             name: request.userResponse.name,
                             imageUrl: request.userResponse.profileImage ?? '',
                             isBookBuddy: true,
+                            request: request,
                           )),
                     ],
                   );
@@ -108,9 +112,72 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
     required String name,
     required String imageUrl,
     required bool isBookBuddy,
+    required RequestModel request,
   }) {
     return Builder(builder: (context) {
       final theme = Theme.of(context);
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+
+      void handleAccept() async {
+        try {
+          final input = SaveConversationInput(
+            isGroup: false,
+            userId: request.userResponse.id
+          );
+
+          await userProvider.saveConnection(input);
+
+          if (context.mounted) {
+            CommonUtils.displaySnackbar(
+              context: context,
+              message: 'Connection request accepted',
+              mode: SnackbarMode.success,
+            );
+          }
+
+       
+        } catch (e) {
+          if (context.mounted) {
+            CommonUtils.displaySnackbar(
+              context: context,
+              message: 'Failed to accept request',
+              mode: SnackbarMode.error,
+            );
+          }
+        }
+      }
+
+      void handleDecline() async {
+        try {
+          final input = SaveRequestInput(
+            id: AuthService.getInstance.currentUser!.uid,
+            requestId: request.userResponse.id,
+      
+          );
+
+          await userProvider.removeRequest(input);
+
+          if (context.mounted) {
+            CommonUtils.displaySnackbar(
+              context: context,
+              message: 'Connection request declined',
+              mode: SnackbarMode.success,
+            );
+          }
+
+       
+        } catch (e) {
+          if (context.mounted) {
+            CommonUtils.displaySnackbar(
+              context: context,
+              message: 'Failed to decline request',
+              mode: SnackbarMode.error,
+            );
+          }
+        }
+      }
+
       return Card(
         margin: EdgeInsets.symmetric(
           horizontal: kIsWeb ? 16.w : 3.w,
@@ -150,9 +217,21 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
                     Expanded(
                       child: Row(
                         children: [
-                          Text(
-                            name,
-                            style: theme.textTheme.titleLarge,
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfilePage(
+                                    userId: request.userResponse.id,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              name,
+                              style: theme.textTheme.titleLarge,
+                            ),
                           ),
                           if (isBookBuddy) ...[
                             Container(
@@ -175,7 +254,7 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
                     Row(
                       children: [
                         InkWell(
-                          onTap: () {},
+                          onTap: handleAccept,
                           child: Text(
                             'Accept',
                             style: theme.textTheme.labelLarge?.copyWith(
@@ -185,7 +264,7 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
                         ),
                         SizedBox(width: 16.w),
                         InkWell(
-                          onTap: () {},
+                          onTap: handleDecline,
                           child: Text(
                             'Decline',
                             style: theme.textTheme.labelLarge?.copyWith(

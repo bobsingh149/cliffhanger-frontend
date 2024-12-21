@@ -11,11 +11,12 @@ import 'package:image_picker_web/image_picker_web.dart' if (dart.library.io) 'pa
 import 'package:provider/provider.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/models/user.dart';
+import 'package:barter_frontend/utils/common_utils.dart';
 
 class EditProfilePage extends StatefulWidget {
   static const String routePath = "/edit-profile";
 
-  const EditProfilePage({Key? key}) : super(key: key);
+   EditProfilePage({Key? key}) : super(key: key);
 
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
@@ -31,6 +32,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? _selectedCity;
   String? _age;
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  String? _imageUrl;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final userId = userProvider.user?.id ?? '';
+      final userSetup = await userProvider.getUserSetup(userId);
+      
+      setState(() {
+        _nameController.text = userSetup.name ?? '';
+        _bioController.text = userSetup.bio ?? '';
+        _selectedCity = userSetup.city;
+        _age = userSetup.age?.toString();
+        _imageUrl = userSetup.profileImage;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading user data: $e')),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -60,6 +91,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void _removeImage() {
     setState(() {
       _imageData = null;
+      _imageUrl = null;
     });
   }
 
@@ -91,12 +123,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
       try {
-
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         
         final updatedUser = UserModel(
-          id: userProvider.user?.id ?? '',  // Preserve existing ID
+          id: userProvider.user?.id ?? '',
           name: _nameController.text,
           bio: _bioController.text,
           age: _age != null ? int.parse(_age!) : null,
@@ -105,18 +137,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         await userProvider.updateUser(updatedUser, _imageData);
         
-        userProvider.clearUserSetup();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully')),
+          CommonUtils.displaySnackbar(
+            context: context,
+            message: 'Profile updated successfully',
+            mode: SnackbarMode.success,
           );
           Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error updating profile: $e')),
+          CommonUtils.displaySnackbar(
+            context: context,
+            message: 'Error updating profile: $e',
+            mode: SnackbarMode.error,
           );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
         }
       }
     }
@@ -126,7 +165,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: kIsWeb ? 25.h : null,
+        toolbarHeight: kIsWeb ? 30.h : null,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppTheme.primaryColor),
           onPressed: () => Navigator.of(context).pop(),
@@ -198,8 +237,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   CircleAvatar(
                     radius: kIsWeb ? 60 : 50,
                     backgroundColor: Colors.grey[200],
-                    backgroundImage: _imageData != null ? MemoryImage(_imageData!) : null,
-                    child: _imageData == null
+                    backgroundImage: _imageData != null 
+                        ? MemoryImage(_imageData!)
+                        : _imageUrl != null 
+                            ? NetworkImage(_imageUrl!) as ImageProvider
+                            : null,
+                    child: _imageData == null && _imageUrl == null
                         ? Icon(Icons.person, size: 40, color: Colors.grey[400])
                         : null,
                   ),
@@ -233,6 +276,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
             focusNode: _focusNodes[1],
             onFocusChange: (hasFocus) => _fieldFocusChange(context, 1),
           ),
+            SizedBox(height: 20.h),
+          StaticSearchbar(
+            onItemSelected: (selectedCity) {
+              setState(() => _selectedCity = selectedCity);
+            },
+            focusNode: _focusNodes[3],
+            initialValue: _selectedCity,
+          ),
           SizedBox(height: 20.h),
           _buildTextField(
             controller: _bioController,
@@ -242,22 +293,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
             focusNode: _focusNodes[2],
             onFocusChange: (hasFocus) => _fieldFocusChange(context, 2),
           ),
-          SizedBox(height: 20.h),
-          StaticSearchbar(
-            onItemSelected: (selectedCity) {
-              setState(() => _selectedCity = selectedCity);
-            },
-            focusNode: _focusNodes[3],
-          ),
+        
           SizedBox(height: 40.h),
           Padding(
             padding: EdgeInsets.symmetric(vertical: 10.h),
             child: ElevatedButton(
-              onPressed: _submit,
+              onPressed: _isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, 40.h),
               ),
-              child: Text('Save Changes'),
+              child: _isLoading 
+                  ? CommonWidget.getButtonLoader(color: Colors.white)
+                  : Text('Save Changes'),
             ),
           ),
           SizedBox(height: 20.h),

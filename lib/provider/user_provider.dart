@@ -45,6 +45,7 @@ class UserProvider with ChangeNotifier {
   Future<void> saveUser(UserModel user, Uint8List? profileImage) async {
     try {
       await _userService.saveUser(user, profileImage);
+      clearUserSetup();
     } catch (e) {
       _logger.e('Error updating user: $e');
       rethrow;
@@ -53,7 +54,9 @@ class UserProvider with ChangeNotifier {
 
   Future<GetBookBuddy> getBookBuddy() async {
     try {
-      return await _userService.getBookBuddy(_user?.id ?? '');
+      clearUserSetup();
+      return await _userService
+          .getBookBuddy(AuthService.getInstance.currentUser!.uid);
     } catch (e) {
       _logger.e('Error fetching book buddy: $e');
       rethrow;
@@ -64,7 +67,7 @@ class UserProvider with ChangeNotifier {
   Future<void> updateUser(UserModel user, Uint8List? profileImage) async {
     try {
       await _userService.updateUser(user, profileImage);
-      clearUser();
+      clearUserSetup();
     } catch (e) {
       _logger.e('Error updating user: $e');
       rethrow;
@@ -75,6 +78,7 @@ class UserProvider with ChangeNotifier {
   Future<void> saveConnection(SaveConversationInput input) async {
     try {
       await _userService.saveConnection(input);
+      clearUserSetup();
     } catch (e) {
       _logger.e('Error saving connection: $e');
       rethrow;
@@ -83,7 +87,10 @@ class UserProvider with ChangeNotifier {
 
   void clearUserSetup() {
     _user = null;
+    _contacts = null;
+    notifyListeners();
   }
+
   // Method to get user setup
   Future<UserSetupModel> getUserSetup(String userId) async {
     if (_user != null) {
@@ -93,15 +100,15 @@ class UserProvider with ChangeNotifier {
     try {
       _logger.i('Fetching user setup for $userId');
       _user = await _userService.getUserSetup(userId);
-      
+
       if (_user == null) {
         throw UserNotFoundException(userId, 'User setup not found');
       }
-      
+
       return _user!;
     } catch (e) {
       _logger.e('Error fetching user setup: $e');
-      throw UserNotFoundException(userId, 'Failed to fetch user setup: $e');
+      rethrow;
     }
   }
 
@@ -120,6 +127,7 @@ class UserProvider with ChangeNotifier {
   Future<void> saveRequest(SaveRequestInput input) async {
     try {
       await _userService.saveRequest(input);
+      clearUserSetup();
     } catch (e) {
       _logger.e('Error saving request: $e');
       rethrow;
@@ -130,6 +138,7 @@ class UserProvider with ChangeNotifier {
   Future<void> removeRequest(SaveRequestInput input) async {
     try {
       await _userService.removeRequest(input);
+      clearUserSetup();
     } catch (e) {
       _logger.e('Error removing request: $e');
       rethrow;
@@ -140,7 +149,7 @@ class UserProvider with ChangeNotifier {
   Future<void> deleteUser(String userId) async {
     try {
       await _userService.deleteUser(userId);
-      clearUser(); // Clear local user data
+      clearUserSetup(); // Clear local user data
     } catch (e) {
       _logger.e('Error deleting user: $e');
       rethrow;
@@ -157,16 +166,28 @@ class UserProvider with ChangeNotifier {
 
   Future<List<BookBuddy>> getBookBuddies({bool forceRefresh = false}) async {
     if (_user == null || forceRefresh) {
+      // Add a delay of 2 seconds
       await getUserSetup(AuthService.getInstance.currentUser!.uid);
     }
     return _user?.bookBuddies ?? [];
   }
 
-  Future<List<ContactModel>> getConnections() async {
-    if (_contacts != null) {
-      return _contacts!;
+  Future<List<ConversationModel>> getNonGroupContacts() async {
+    if (_user == null) {
+      await getUserSetup(AuthService.getInstance.currentUser!.uid);
     }
+    List<ConversationModel> conversationModels = _user?.conversations ?? [];
 
+    conversationModels = conversationModels
+        .where((conversation) => !conversation.isGroup)
+        .toList();
+
+    AppLogger.instance.i("conversationModels: ${conversationModels.length}");
+
+    return conversationModels;
+  }
+
+  Future<List<ContactModel>> getAllContacts() async {
     if (_user == null) {
       await getUserSetup(AuthService.getInstance.currentUser!.uid);
     }
@@ -174,7 +195,9 @@ class UserProvider with ChangeNotifier {
 
     // Get latest messages for all conversations
     Map<String, ChatModel> latestMessages =
-        await ChatService.getInstance.getLatestMessages();
+        await ChatService.getInstance.getLatestMessages(conversationModels);
+
+    AppLogger.instance.i("latestMessages: $latestMessages");
 
     List<ContactModel> connections = conversationModels.map((conversation) {
       // Get the latest message for this conversation
@@ -183,23 +206,19 @@ class UserProvider with ChangeNotifier {
       return ContactModel(
         conversationId: conversation.conversationId,
         isGroup: conversation.isGroup,
-        users: conversation.users,
+        users: [
+          ...conversation.members,
+          if (conversation.userResponse != null) conversation.userResponse!
+        ],
         lastMessage: latestChat?.message,
         lastMessageTime: latestChat?.timestamp,
         groupName: conversation.groupName,
         groupImage: conversation.groupImage,
+        userResponse: conversation.userResponse,
       );
     }).toList();
 
     return _contacts = connections;
-  }
-
-  // Optionally, you can have a method to clear user data
-  void clearUser() {
-    _user = null;
-    _contacts = null;
-
-    notifyListeners();
   }
 
   Future<void> pickGroupImage(ImageSource source) async {
@@ -234,6 +253,7 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+
       await _userService.createGroup(
         name: name,
         memberIds: memberIds,
@@ -241,6 +261,7 @@ class UserProvider with ChangeNotifier {
         groupImage: groupImageData,
       );
       groupImageData = null;
+      clearUserSetup();
     } catch (e) {
       _logger.e('Error creating group: $e');
       rethrow;
@@ -250,90 +271,8 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<List<ContactModel>> getMockConnections() async {
-    return [
-      ContactModel(
-        conversationId: 'conv1',
-        isGroup: false,
-        users: [
-          UserModel(
-            id: 'user1',
-            name: 'Sarah Wilson',
-            profileImage: 'https://picsum.photos/200?random=10',
-          ),
-        ],
-        lastMessage: 'Hey, have you read the new book I recommended?',
-        lastMessageTime: DateTime.now().subtract(const Duration(minutes: 30)),
-      ),
-      ContactModel(
-        conversationId: 'conv2',
-        isGroup: true,
-        users: [
-          UserModel(
-            id: 'user2',
-            name: 'Book Club Members',
-            profileImage: 'https://picsum.photos/200?random=11',
-          ),
-        ],
-        lastMessage: 'Next meeting is on Friday!',
-        lastMessageTime: DateTime.now().subtract(const Duration(hours: 2)),
-        groupName: 'Fantasy Book Club',
-        groupImage: 'https://picsum.photos/200?random=12',
-      ),
-      ContactModel(
-        conversationId: 'conv3',
-        isGroup: false,
-        users: [
-          UserModel(
-            id: 'user3',
-            name: 'David Chen',
-            profileImage: 'https://picsum.photos/200?random=13',
-          ),
-        ],
-        lastMessage: 'Thanks for the book exchange!',
-        lastMessageTime: DateTime.now().subtract(const Duration(hours: 5)),
-      ),
-      ContactModel(
-        conversationId: 'conv4',
-        isGroup: false,
-        users: [
-          UserModel(
-            id: 'user4',
-            name: 'Emily Parker',
-            profileImage: 'https://picsum.photos/200?random=14',
-          ),
-        ],
-        lastMessage: 'Did you finish the chapter?',
-        lastMessageTime: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      ContactModel(
-        conversationId: 'conv5',
-        isGroup: true,
-        users: [
-          UserModel(
-            id: 'user5',
-            name: 'Mystery Readers',
-            profileImage: 'https://picsum.photos/200?random=15',
-          ),
-        ],
-        lastMessage: 'Who else figured out the killer?',
-        lastMessageTime: DateTime.now().subtract(const Duration(days: 2)),
-        groupName: 'Mystery Book Club',
-        groupImage: 'https://picsum.photos/200?random=16',
-      ),
-      ContactModel(
-        conversationId: 'conv6',
-        isGroup: false,
-        users: [
-          UserModel(
-            id: 'user6',
-            name: 'Alex Thompson',
-            profileImage: 'https://picsum.photos/200?random=17',
-          ),
-        ],
-        lastMessage: 'Looking forward to our book discussion!',
-        lastMessageTime: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-    ];
+  Future<void> setGroupImage(Uint8List imageData) async {
+    groupImageData = imageData;
+    notifyListeners();
   }
 }

@@ -41,21 +41,21 @@ class LinksPage extends StatelessWidget {
               _buildLinkCard(
                 context,
                 'Frontend Repository',
-                'https://github.com/dushyantsingh-ds/cliffhanger-frontend',
+                'https://github.com/ArtFoliers/barter-frontend',
                 FontAwesomeIcons.github,
               ),
               SizedBox(height: 15.h),
               _buildLinkCard(
                 context,
                 'Backend Repository',
-                'https://github.com/dushyantsingh-ds/cliffhanger-backend',
+                'https://github.com/ArtFoliers/Barter-backend',
                 FontAwesomeIcons.github,
               ),
               SizedBox(height: 15.h),
               _buildLinkCard(
                 context,
                 'Website',
-                'https://cliffhanger-frontend.web.app',
+                'https://www.cliffhanger.in',
                 FontAwesomeIcons.globe,
               ),
               SizedBox(height: 15.h),
@@ -65,17 +65,8 @@ class LinksPage extends StatelessWidget {
                     child: _buildLinkCard(
                       context,
                       'Android App',
-                      'https://play.google.com/store/apps/details?id=com.dushyant.cliffhanger',
+                      'https://drive.google.com/file/d/1Sq32kk-FeASRwzpmBtGiDAnj_x6KZPGL/view?usp=sharing',
                       FontAwesomeIcons.googlePlay,
-                    ),
-                  ),
-                  SizedBox(width: 15.w),
-                  Expanded(
-                    child: _buildLinkCard(
-                      context,
-                      'iOS App',
-                      'https://apps.apple.com/app/cliffhanger',
-                      FontAwesomeIcons.appStore,
                     ),
                   ),
                 ],

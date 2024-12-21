@@ -25,12 +25,12 @@ class BookService {
       queryParameters: {"q": query},
     ));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> bookList = ServiceUtils.parseResponse(response);
-      return bookList.map((book) => Book.fromJson(book)).toList();
-    } else {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
+
+    final List<dynamic> bookList = ServiceUtils.parseResponse(response);
+    return bookList.map((book) => Book.fromJson(book)).toList();
   }
 
   Future<void> postBook(SavePost userBook) async {
@@ -59,7 +59,7 @@ class BookService {
     final response = await request.send();
     final responseBody = await http.Response.fromStream(response);
 
-    if (response.statusCode != 201) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(responseBody));
     }
   }

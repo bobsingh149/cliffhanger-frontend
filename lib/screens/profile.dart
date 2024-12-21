@@ -23,63 +23,67 @@ class ProfilePage extends StatefulWidget {
   static const String routePath = "/profile";
   final String userId;
 
-  const ProfilePage({super.key, required this.userId});
+  ProfilePage({super.key, required this.userId});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  PostProvider? provider;
-  late Future<Map<PostCategory, List<PostModel>>?> _userPostsFuture;
-  late Future<UserModel?> _userFuture;
-  bool isInit = true;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (isInit) {
-      provider = Provider.of<PostProvider>(context, listen: false);
-      _userPostsFuture = provider!.getUserPosts(widget.userId);
-      _userFuture = Provider.of<UserProvider>(context, listen: false).fetchUser(widget.userId);
-      isInit = false;
-    }
-  }
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
+    PostProvider provider = Provider.of<PostProvider>(context, listen: false);
+    Future<Map<PostCategory, List<PostModel>>?> _userPostsFuture =
+        Provider.of<PostProvider>(context, listen: false)
+            .getUserPosts(widget.userId);
+    Future<UserModel?> _userFuture =
+        Provider.of<UserProvider>(context, listen: false)
+            .fetchUser(widget.userId);
+
     final theme = Theme.of(context);
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
           elevation: 0,
-          
           backgroundColor: theme.colorScheme.background,
           title: Text(
-            widget.userId == AuthService.getInstance.currentUser!.uid 
-              ? "My Library"
-              : "User's Library",
-            
+            widget.userId == AuthService.getInstance.currentUser!.uid
+                ? "My Library"
+                : "User's Library",
           ),
           actions: [
             if (widget.userId == AuthService.getInstance.currentUser!.uid) ...[
-              if (!kIsWeb) IconButton(
-                icon: Icon(Icons.person_add),
-                onPressed: () {
-                  Navigator.pushNamed(context, ConnectionRequestsPage.routePath);
-                },
-              ),
+              if (!kIsWeb)
+                IconButton(
+                  icon: Icon(Icons.person_add),
+                  onPressed: () {
+                    Navigator.pushNamed(
+                        context, ConnectionRequestsPage.routePath);
+                  },
+                ),
               PopupMenuButton<String>(
                 icon: Icon(Icons.settings),
                 onSelected: (value) {
                   if (value == 'edit_profile') {
                     Navigator.pushNamed(context, EditProfilePage.routePath);
                   } else if (value == 'logout') {
-                    Provider.of<UserProvider>(context, listen: false).clearUserSetup();
+                    setState(() {
+                      isLoading = true;
+                    });
                     AuthService.getInstance.signOut();
+
+                    Provider.of<UserProvider>(context, listen: false)
+                        .clearUserSetup();
+
                     Navigator.of(context).pushNamedAndRemoveUntil(
                       SignInPage.routePath,
                       (route) => false,
                     );
+                    setState(() {
+                      isLoading = false;
+                    });
                   }
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -88,7 +92,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Text('Edit Profile'),
                   ),
                   PopupMenuItem<String>(
-                    
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -98,8 +101,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             value: themeProvider.isDarkMode,
                             onChanged: (_) {
                               themeProvider.setThemeMode(
-                                themeProvider.isDarkMode ? ThemeMode.light : ThemeMode.dark
-                              );
+                                  themeProvider.isDarkMode
+                                      ? ThemeMode.light
+                                      : ThemeMode.dark);
                             },
                           ),
                         ),
@@ -117,15 +121,16 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icon(Icons.person_add),
                 onPressed: () async {
                   try {
-                    final currentUserId = AuthService.getInstance.currentUser!.uid;
+                    final currentUserId =
+                        AuthService.getInstance.currentUser!.uid;
                     final requestInput = SaveRequestInput(
                       id: currentUserId,
                       requestId: widget.userId,
                     );
-                    
+
                     await Provider.of<UserProvider>(context, listen: false)
                         .saveRequest(requestInput);
-                    
+
                     CommonUtils.displaySnackbar(
                       context: context,
                       message: 'Connection request sent successfully!',
@@ -149,82 +154,91 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ),
-        body: RefreshIndicator(
-          onRefresh: () async {
-            setState(() {
-              _userPostsFuture = provider!.getUserPosts(widget.userId);
-              _userFuture = Provider.of<UserProvider>(context, listen: false).fetchUser(widget.userId);
-            });
-          },
-          child: FutureBuilder<List<dynamic>>(
-            future: Future.wait([_userPostsFuture, _userFuture]),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CommonWidget.getLoader();
-              }
+        body: isLoading
+            ? CommonWidget.getLoader()
+            : RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {
+                    _userPostsFuture = provider!.getUserPosts(widget.userId);
+                    _userFuture =
+                        Provider.of<UserProvider>(context, listen: false)
+                            .fetchUser(widget.userId);
+                  });
+                },
+                child: FutureBuilder<List<dynamic>>(
+                  future: Future.wait([_userPostsFuture, _userFuture]),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CommonWidget.getLoader();
+                    }
 
-              if (snapshot.hasError) {
-                return Center(child: Text('Error loading data'));
-              }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error loading data'));
+                    }
 
-              final posts = snapshot.data![0] as Map<PostCategory, List<PostModel>>?;
-              final user = snapshot.data![1] as UserModel?;
+                    final posts = snapshot.data![0]
+                        as Map<PostCategory, List<PostModel>>?;
+                    final user = snapshot.data![1] as UserModel?;
 
-              if (user == null) {
-                return Center(child: Text('User not found'));
-              }
+                    if (user == null) {
+                      return Center(child: Text('User not found'));
+                    }
 
-              final postsCount = posts?.values.expand((posts) => posts).length ?? 0;
-              final bartersCount = posts?[PostCategory.barter]?.length ?? 0;
+                    final postsCount =
+                        posts?.values.expand((posts) => posts).length ?? 0;
+                    final bartersCount =
+                        posts?[PostCategory.barter]?.length ?? 0;
 
-              return DefaultTabController(
-                length: postCategoryList.length,
-                child: NestedScrollView(
-                  headerSliverBuilder: (context, _) => [
-                    SliverToBoxAdapter(
-                      child: UserProfileSection(
-                        user: user,
-                        postsCount: postsCount,
-                        bartersCount: bartersCount,
-                      ),
-                    ),
-                    SliverPersistentHeader(
-                      delegate: _SliverAppBarDelegate(
-                        TabBar(
-                          tabs: postCategoryList
-                              .map((title) => Tab(text: title.displayName))
+                    return DefaultTabController(
+                      length: postCategoryList.length,
+                      child: NestedScrollView(
+                        headerSliverBuilder: (context, _) => [
+                          SliverToBoxAdapter(
+                            child: UserProfileSection(
+                              user: user,
+                              postsCount: postsCount,
+                              bartersCount: bartersCount,
+                            ),
+                          ),
+                          SliverPersistentHeader(
+                            delegate: _SliverAppBarDelegate(
+                              TabBar(
+                                tabs: postCategoryList
+                                    .map(
+                                        (title) => Tab(text: title.displayName))
+                                    .toList(),
+                                labelColor: theme.colorScheme.primary,
+                                unselectedLabelColor: theme
+                                    .colorScheme.onSurface
+                                    .withOpacity(0.6),
+                                indicatorColor: theme.colorScheme.primary,
+                              ),
+                            ),
+                            pinned: true,
+                          ),
+                        ],
+                        body: TabBarView(
+                          children: postCategoryList
+                              .map((title) => buildTabContent(title))
                               .toList(),
-                          labelColor: theme.colorScheme.primary,
-                          unselectedLabelColor:
-                              theme.colorScheme.onSurface.withOpacity(0.6),
-                          indicatorColor: theme.colorScheme.primary,
                         ),
                       ),
-                      pinned: true,
-                    ),
-                  ],
-                  body: TabBarView(
-                    children: postCategoryList
-                        .map((title) => buildTabContent(title))
-                        .toList(),
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-        ),
+              ),
       ),
     );
   }
 
   Widget buildTabContent(PostCategory tabTitle) {
-    List<PostModel> books = provider!.profilePosts![tabTitle] ?? [];
+    List<PostModel> books = Provider.of<PostProvider>(context, listen: false)
+            .profilePosts![tabTitle] ??
+        [];
 
     return GridView.builder(
       padding: EdgeInsets.symmetric(
-        horizontal: kIsWeb ? 16.w : 3.w,
-        vertical: kIsWeb ? 16.h : 6.h
-      ),
+          horizontal: kIsWeb ? 16.w : 3.w, vertical: kIsWeb ? 16.h : 6.h),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: kIsWeb ? 4 : 2,
         childAspectRatio: kIsWeb ? (2 / 3) : (2 / 3),
@@ -300,7 +314,13 @@ class UserProfileSection extends StatelessWidget {
                     SizedBox(height: 5.h),
                     TextButton(
                       onPressed: () {
-                        // Add navigation or action here
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                HomePage(filterType: FilterType.userPosts, userIdPosts: user.id, userName: user.name),
+                          ),
+                        );
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,

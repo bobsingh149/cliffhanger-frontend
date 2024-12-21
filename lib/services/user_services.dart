@@ -11,7 +11,6 @@ import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:barter_frontend/utils/http_client.dart';
 import 'package:barter_frontend/utils/service_utils.dart';
 import 'package:http/http.dart' as http;
-import 'package:barter_frontend/exceptions/user_exceptions.dart';
 
 class UserService {
   final http.Client client;
@@ -35,8 +34,8 @@ class UserService {
 
     if (response.statusCode == 200) {
       return UserModel.fromJson(ServiceUtils.parseResponse(response));
-    } else if (response.statusCode == 404) {
-      throw UserNotFoundException(userId);
+    } else if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     } else {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
@@ -68,7 +67,7 @@ class UserService {
 
     AppLogger.instance.i('Response: $responseBody');
 
-    if (response.statusCode != 201) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(responseBody));
     }
   }
@@ -78,11 +77,13 @@ class UserService {
       Uri.parse('${ApiRoutePaths.getBookBuddy}?id=$userId'),
     );
 
-    if (response.statusCode == 200) {
+       if (response.statusCode >= 400) {
+        throw Exception(ServiceUtils.parseErrorMessage(response));
+       }
+
       return GetBookBuddy.fromJson(ServiceUtils.parseResponse(response)[0]);
-    } else {
-      throw Exception(ServiceUtils.parseErrorMessage(response));
-    }
+
+      
   }
 
   Future<void> updateUser(UserModel user, Uint8List? profileImage) async {
@@ -113,20 +114,20 @@ class UserService {
 
     AppLogger.instance.i('Response: $responseBody');
 
-    if (response.statusCode != 200) {
-      // Note: Using 200 for PUT instead of 201
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(responseBody));
     }
   }
 
   Future<void> saveConnection(SaveConversationInput input) async {
+    final userId = AuthService.getInstance.currentUser!.uid;
     final response = await client.post(
-      Uri.parse(ApiRoutePaths.saveConnection),
+      Uri.parse('${ApiRoutePaths.saveConnection}/$userId'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(input.toJson()),
     );
 
-    if (response.statusCode != 201) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
@@ -138,6 +139,8 @@ class UserService {
 
     if (response.statusCode == 200) {
       return UserSetupModel.fromJson(ServiceUtils.parseResponse(response));
+    } else if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     } else {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
@@ -152,6 +155,8 @@ class UserService {
     if (response.statusCode == 200) {
       final List<dynamic> data = ServiceUtils.parseResponse(response);
       return data.map((json) => UserModel.fromJson(json)).toList();
+    } else if (response.statusCode >= 400) {
+      throw Exception(ServiceUtils.parseErrorMessage(response));
     } else {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
@@ -164,7 +169,7 @@ class UserService {
       body: jsonEncode(input.toJson()),
     );
 
-    if (response.statusCode != 201) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
@@ -176,7 +181,7 @@ class UserService {
       body: jsonEncode(input.toJson()),
     );
 
-    if (response.statusCode != 204) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
@@ -186,7 +191,7 @@ class UserService {
       Uri.parse('${ApiRoutePaths.deleteUser}/$userId'),
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
   }
@@ -197,16 +202,20 @@ class UserService {
     String? description,
     Uint8List? groupImage,
   }) async {
+    final userId = AuthService.getInstance.currentUser!.uid;
+
+    memberIds.add(userId);
+
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse(ApiRoutePaths.saveConnection),
+      Uri.parse('${ApiRoutePaths.saveGroup}/$userId'),
     );
 
     // Create ConversationInputModel
     final input = ConversationInputModel(
       isGroup: true,
       members: memberIds,
-      userId: AuthService.getInstance.currentUser!.uid,
+      userId:null,
       groupName: name,
     );
 
@@ -227,7 +236,7 @@ class UserService {
     final response = await request.send();
     final responseBody = await http.Response.fromStream(response);
 
-    if (response.statusCode != 201) {
+    if (response.statusCode >= 400) {
       throw Exception(ServiceUtils.parseErrorMessage(responseBody));
     }
   }

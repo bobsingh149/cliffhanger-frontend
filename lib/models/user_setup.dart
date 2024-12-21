@@ -39,14 +39,17 @@ class UserSetupModel {
       profileImage: json['profileImage'] as String?,
       connections: List<String>.from(json['connections'] ?? []),
       bookBuddies: (json['bookBuddies'] as List?)
-          ?.map((e) => BookBuddy.fromJson(e))
-          .toList() ?? [],
+              ?.map((e) => BookBuddy.fromJson(e))
+              .toList() ??
+          [],
       conversations: (json['conversations'] as List?)
-          ?.map((e) => ConversationModel.fromJson(e))
-          .toList() ?? [],
+              ?.map((e) => ConversationModel.fromJson(e))
+              .toList() ??
+          [],
       requests: (json['requests'] as List?)
-          ?.map((e) => RequestModel.fromJson(e))
-          .toList() ?? [],
+              ?.map((e) => RequestModel.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 
@@ -67,7 +70,7 @@ class UserSetupModel {
 class ConversationModel {
   final String conversationId;
   final bool isGroup;
-  final List<UserModel> users;
+  final List<UserModel> members;
   final UserModel? userResponse;
   final String? groupName;
   final String? groupImage;
@@ -75,7 +78,7 @@ class ConversationModel {
   ConversationModel({
     required this.conversationId,
     required this.isGroup,
-    this.users = const [],
+    this.members = const [],
     this.userResponse,
     this.groupName,
     this.groupImage,
@@ -85,10 +88,11 @@ class ConversationModel {
     return ConversationModel(
       conversationId: json['conversationId'] as String,
       isGroup: json['group'] as bool,
-      users: (json['members'] as List?)
-          ?.map((e) => UserModel.fromJson(e))
-          .toList() ?? [],
-      userResponse: json['userResponse'] != null 
+      members: (json['members'] as List?)
+              ?.map((e) => UserModel.fromJson(e))
+              .toList() ??
+          [],
+      userResponse: json['userResponse'] != null
           ? UserModel.fromJson(json['userResponse'])
           : null,
       groupName: json['groupName'] as String?,
@@ -99,7 +103,7 @@ class ConversationModel {
   Map<String, dynamic> toJson() => {
         'conversationId': conversationId,
         'group': isGroup,
-        'members': users.map((e) => e.toJson()).toList(),
+        'members': members.map((e) => e.toJson()).toList(),
         'userResponse': userResponse?.toJson(),
         'groupName': groupName,
         'groupImage': groupImage,
@@ -126,4 +130,4 @@ class RequestModel {
         'userResponse': userResponse.toJson(),
         'timestamp': timestamp.toIso8601String(),
       };
-} 
+}
