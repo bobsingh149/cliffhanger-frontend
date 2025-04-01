@@ -7,7 +7,8 @@ import 'package:barter_frontend/widgets/static_search_bar.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:image_picker_web/image_picker_web.dart' if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
+import 'package:image_picker_web/image_picker_web.dart'
+    if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
 import 'package:provider/provider.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/models/user.dart';
@@ -16,7 +17,7 @@ import 'package:barter_frontend/utils/common_utils.dart';
 class EditProfilePage extends StatefulWidget {
   static const String routePath = "/edit-profile";
 
-   EditProfilePage({Key? key}) : super(key: key);
+  EditProfilePage({Key? key}) : super(key: key);
 
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
@@ -46,9 +47,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final userId = userProvider.user?.id ?? '';
       final userSetup = await userProvider.getUserSetup(userId);
-      
+
       setState(() {
-        _nameController.text = userSetup.name ?? '';
+        _nameController.text = userSetup.name;
         _bioController.text = userSetup.bio ?? '';
         _selectedCity = userSetup.city;
         _age = userSetup.age?.toString();
@@ -82,7 +83,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  InputDecoration _buildInputDecoration(String label, {bool isRequired = false}) {
+  InputDecoration _buildInputDecoration(String label,
+      {bool isRequired = false}) {
     return InputDecoration(
       labelText: isRequired ? '$label *' : label,
     );
@@ -117,7 +119,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }
       }
     } catch (e) {
-      print('Error picking image: $e');
+      if (mounted) {
+        CommonUtils.displaySnackbar(
+          context: context,
+          message: 'Error picking image: $e',
+          mode: SnackbarMode.error,
+        );
+      }
     }
   }
 
@@ -126,7 +134,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() => _isLoading = true);
       try {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
-        
+
         final updatedUser = UserModel(
           id: userProvider.user?.id ?? '',
           name: _nameController.text,
@@ -136,7 +144,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
 
         await userProvider.updateUser(updatedUser, _imageData);
-        
+
         if (mounted) {
           CommonUtils.displaySnackbar(
             context: context,
@@ -172,7 +180,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: !kIsWeb ?  Text('Edit Profile') : null,
+        title: !kIsWeb ? Text('Edit Profile') : null,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -201,7 +209,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     constraints: BoxConstraints(
                       minHeight: 0.85.sh,
                     ),
-                    padding: EdgeInsets.all(10.w),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
                     child: _buildFormContent(),
                   ),
           ),
@@ -216,17 +225,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (kIsWeb) Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Text(
-                'Edit Profile',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+          if (kIsWeb)
+            Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Text(
+                  'Edit Profile',
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                 ),
               ),
             ),
-          ),
           SizedBox(height: 30.h),
           Center(
             child: BounceInDown(
@@ -235,11 +245,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 alignment: Alignment.center,
                 children: [
                   CircleAvatar(
-                    radius: kIsWeb ? 60 : 50,
+                    radius: kIsWeb ? 60 : 60,
                     backgroundColor: Colors.grey[200],
-                    backgroundImage: _imageData != null 
+                    backgroundImage: _imageData != null
                         ? MemoryImage(_imageData!)
-                        : _imageUrl != null 
+                        : _imageUrl != null
                             ? NetworkImage(_imageUrl!) as ImageProvider
                             : null,
                     child: _imageData == null && _imageUrl == null
@@ -267,6 +277,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
             onFocusChange: (hasFocus) => _fieldFocusChange(context, 0),
           ),
           SizedBox(height: 20.h),
+          StaticSearchbar(
+            onItemSelected: (selectedCity) {
+              setState(() => _selectedCity = selectedCity);
+            },
+            focusNode: _focusNodes[3],
+            initialValue: _selectedCity,
+          ),
+          SizedBox(height: 20.h),
           _buildDropdownField(
             value: _age,
             label: 'Age',
@@ -275,14 +293,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
             onChanged: (value) => setState(() => _age = value),
             focusNode: _focusNodes[1],
             onFocusChange: (hasFocus) => _fieldFocusChange(context, 1),
-          ),
-            SizedBox(height: 20.h),
-          StaticSearchbar(
-            onItemSelected: (selectedCity) {
-              setState(() => _selectedCity = selectedCity);
-            },
-            focusNode: _focusNodes[3],
-            initialValue: _selectedCity,
           ),
           SizedBox(height: 20.h),
           _buildTextField(
@@ -293,7 +303,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
             focusNode: _focusNodes[2],
             onFocusChange: (hasFocus) => _fieldFocusChange(context, 2),
           ),
-        
           SizedBox(height: 40.h),
           Padding(
             padding: EdgeInsets.symmetric(vertical: 10.h),
@@ -302,7 +311,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, 40.h),
               ),
-              child: _isLoading 
+              child: _isLoading
                   ? CommonWidget.getButtonLoader(color: Colors.white)
                   : Text('Save Changes'),
             ),
@@ -326,8 +335,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: AppTheme.primaryColor),
-       
+        prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
       ),
       validator: (value) {
         if (value!.isEmpty && label == 'Name') {
@@ -353,7 +361,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: AppTheme.primaryColor),
-       
       ),
       items: items.map((String value) {
         return DropdownMenuItem<String>(
@@ -363,6 +370,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }).toList(),
       onChanged: onChanged,
       focusNode: focusNode,
+      menuMaxHeight: kIsWeb ? 300.h : 250.h,
+      isExpanded: true,
     );
   }
 
@@ -398,7 +407,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             if (_imageData != null)
               ListTile(
                 leading: Icon(Icons.delete, color: Colors.red),
-                title: Text('Remove photo', style: TextStyle(color: Colors.red)),
+                title:
+                    Text('Remove photo', style: TextStyle(color: Colors.red)),
                 onTap: () {
                   Navigator.pop(context);
                   _removeImage();

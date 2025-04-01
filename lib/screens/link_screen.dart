@@ -1,4 +1,5 @@
 import 'package:barter_frontend/theme/theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,7 +20,8 @@ class LinksPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Project Links'),
+        automaticallyImplyLeading: !kIsWeb,
+        title: Text('Download App'),
       ),
       body: Center(
         child: Container(
@@ -30,46 +32,22 @@ class LinksPage extends StatelessWidget {
             children: [
               Text(
                 'Cliffhanger',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(color:AppTheme.primaryColor),
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineMedium
+                    ?.copyWith(color: AppTheme.primaryColor),
               ),
               SizedBox(height: 10.h),
               Text(
-                'Book Social Media',
+                'Download Our App',
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               SizedBox(height: 40.h),
               _buildLinkCard(
                 context,
-                'Frontend Repository',
-                'https://github.com/ArtFoliers/barter-frontend',
-                FontAwesomeIcons.github,
-              ),
-              SizedBox(height: 15.h),
-              _buildLinkCard(
-                context,
-                'Backend Repository',
-                'https://github.com/ArtFoliers/Barter-backend',
-                FontAwesomeIcons.github,
-              ),
-              SizedBox(height: 15.h),
-              _buildLinkCard(
-                context,
-                'Website',
-                'https://www.cliffhanger.in',
-                FontAwesomeIcons.globe,
-              ),
-              SizedBox(height: 15.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildLinkCard(
-                      context,
-                      'Android App',
-                      'https://drive.google.com/file/d/1Sq32kk-FeASRwzpmBtGiDAnj_x6KZPGL/view?usp=sharing',
-                      FontAwesomeIcons.googlePlay,
-                    ),
-                  ),
-                ],
+                'Download Android App',
+                'https://drive.google.com/file/d/1Sq32kk-FeASRwzpmBtGiDAnj_x6KZPGL/view?usp=sharing',
+                FontAwesomeIcons.googlePlay,
               ),
             ],
           ),

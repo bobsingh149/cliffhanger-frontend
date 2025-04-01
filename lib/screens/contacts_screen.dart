@@ -1,6 +1,7 @@
 import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/screens/chat_screen.dart';
+import 'package:barter_frontend/screens/main_screen.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:flutter/foundation.dart';
@@ -30,7 +31,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         elevation: 0,
         backgroundColor: theme.colorScheme.background,
         automaticallyImplyLeading: false,
-        title: Text(
+        title: const Text(
           'Contacts',
         ),
         centerTitle: true,
@@ -72,8 +73,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
             ),
             child: RefreshIndicator(
               onRefresh: () async {
-                // Force refresh contacts
-                // await Provider.of<UserProvider>(context, listen: false).getConnections(forceRefresh: true);
+                Provider.of<UserProvider>(context, listen: false)
+                    .clearUserSetup();
               },
               child: FutureBuilder<List<ContactModel>>(
                 future: Provider.of<UserProvider>(context, listen: false)
@@ -133,13 +134,10 @@ class _ContactsScreenState extends State<ContactsScreen> {
               ? CachedNetworkImageProvider(contact.getDisplayImage()!)
               : null,
           child: contact.getDisplayImage() == null
-              ? Text(
-                  contact.getDisplayName()[0].toUpperCase(),
-                  style: TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
+              ? Icon(
+                  contact.isGroup ? Icons.group : Icons.person,
+                  color: AppTheme.primaryColor,
+                  size: 25,
                 )
               : null,
         ),

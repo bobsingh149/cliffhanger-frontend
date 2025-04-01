@@ -138,6 +138,7 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                                             .searchResults[index].title;
                                         if (_isDropdownOpen) _closeDropdown();
                                       });
+                                      FocusScope.of(context).unfocus();
                                     },
                                   ),
                                 );

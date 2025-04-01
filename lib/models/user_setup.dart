@@ -29,7 +29,6 @@ class UserSetupModel {
   });
 
   factory UserSetupModel.fromJson(Map<String, dynamic> json) {
-    _logger.d('Parsing user setup: $json');
     return UserSetupModel(
       id: json['id'] as String,
       name: json['name'] as String,

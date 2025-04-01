@@ -19,7 +19,7 @@ class AppIntroductionScreen extends StatelessWidget {
           PageViewModel(
             title: "Welcome to Cliffhanger",
             body:
-                "Connect with book lovers, share your reading journey, and discover new books.",
+                "Connect with book lovers, share what you're reading, and discover new books.",
             image: Center(
               child: Image.asset(
                 'assets/books.png',
@@ -41,7 +41,7 @@ class AppIntroductionScreen extends StatelessWidget {
           PageViewModel(
             title: "Find Your Perfect Book Buddy",
             body:
-                "Find and become book buddies with readers who share your interests through our smart matching algorithm.",
+                "Discover your perfect book buddy with our advanced matching system.",
             image: Center(
               child: Image.asset(
                 'assets/buddy.png',
@@ -84,7 +84,7 @@ class AppIntroductionScreen extends StatelessWidget {
         showSkipButton: true,
         skip: const Text("Skip"),
         next: const Text("Next"),
-        done: const Text("Continue"),
+        done: const Text("Get Started"),
         onDone: () {
           // Navigate to sign in page when done
           Navigator.of(context).pushReplacementNamed(SignInPage.routePath);

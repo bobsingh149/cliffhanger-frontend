@@ -19,7 +19,13 @@ class AppTheme {
   static const Color textColorLight = Color(0xFF212121);
   static const Color textColorDark =
       Color(0xFFD8D8D8); // More off-white for better readability
-  static const TextStyle appBarTitleStyle = TextStyle(
+  static const TextStyle appBarTitleStyleLight = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: Colors.black,
+  );
+
+  static const TextStyle appBarTitleStyleDark = TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.w600,
     color: primaryColor,
@@ -77,11 +83,11 @@ class AppTheme {
         backgroundColor: surfaceColorLight,
         foregroundColor: primaryColor,
         centerTitle: true,
-        titleTextStyle: appBarTitleStyle,
+        titleTextStyle: appBarTitleStyleLight,
       ),
       textTheme: _buildTextTheme(textColorLight),
       cardTheme: CardTheme(
-        elevation: 2,
+        elevation: 1,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColorLight,
       ),
@@ -94,7 +100,7 @@ class AppTheme {
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           textStyle: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.white,
               letterSpacing: 0.5),
@@ -197,11 +203,11 @@ class AppTheme {
         backgroundColor: surfaceColorDark,
         foregroundColor: primaryColor,
         centerTitle: true,
-        titleTextStyle: appBarTitleStyle,
+        titleTextStyle: appBarTitleStyleDark,
       ),
       textTheme: _buildTextTheme(textColorDark),
       cardTheme: CardTheme(
-        elevation: 2,
+        elevation: 1,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: surfaceColorDark,
         shadowColor: Colors.grey.shade600,
@@ -215,7 +221,7 @@ class AppTheme {
           backgroundColor: primaryColor.withOpacity(0.7),
           foregroundColor: Colors.white,
           textStyle: TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 0.5,
@@ -319,7 +325,7 @@ class AppTheme {
         backgroundColor: surfaceColorLight,
         foregroundColor: primaryColor,
         centerTitle: true,
-        titleTextStyle: appBarTitleStyle,
+        titleTextStyle: appBarTitleStyleLight,
       ),
       textTheme: _buildTextTheme(textColorLight),
       cardTheme: CardTheme(
@@ -336,7 +342,7 @@ class AppTheme {
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           textStyle: TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 0.5,
@@ -440,7 +446,7 @@ class AppTheme {
         backgroundColor: surfaceColorDark,
         foregroundColor: primaryColor,
         centerTitle: true,
-        titleTextStyle: appBarTitleStyle,
+        titleTextStyle: appBarTitleStyleDark,
       ),
       textTheme: _buildTextTheme(textColorDark),
       cardTheme: CardTheme(
@@ -458,7 +464,7 @@ class AppTheme {
           backgroundColor: primaryColor.withOpacity(0.7),
           foregroundColor: Colors.white,
           textStyle: TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 0.5,
@@ -554,11 +560,11 @@ class AppTheme {
       headlineSmall: TextStyle(
           fontSize: 18, fontWeight: FontWeight.w600, color: textColor),
       titleLarge: TextStyle(
-          fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
+          fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
       bodyLarge: TextStyle(
           fontSize: 16,
           color: textColor,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           letterSpacing: 0.5),
       bodyMedium: TextStyle(fontSize: 14, color: textColor),
       labelLarge: TextStyle(

@@ -1,6 +1,8 @@
 import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/models/post_category.dart';
 import 'package:barter_frontend/provider/book_provider.dart';
+import 'package:barter_frontend/provider/post_provider.dart';
+import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
@@ -33,13 +35,13 @@ class _PostBookPageState extends State<PostBookPage> {
     super.didChangeDependencies();
     if (isInit) {
       bookProvider = Provider.of<BookProvider>(context, listen: true);
-      
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           FocusScope.of(context).requestFocus(_searchFocusNode);
         }
       });
-      
+
       isInit = false;
     }
   }
@@ -55,7 +57,11 @@ class _PostBookPageState extends State<PostBookPage> {
       await bookProvider.pickImage(kIsWeb ? ImageSource.gallery : source);
       setState(() {});
     } catch (e) {
-      print('Error picking image: $e');
+      CommonUtils.displaySnackbar(
+        context: context,
+        message: 'Error picking image: $e',
+        mode: SnackbarMode.error,
+      );
     }
   }
 
@@ -74,33 +80,151 @@ class _PostBookPageState extends State<PostBookPage> {
             : SingleChildScrollView(
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: kIsWeb ? 0.15.sw : 0.w,
-                    vertical: kIsWeb ? 30.h : 5.h
-                  ),
+                      horizontal: kIsWeb ? 0.15.sw : 0.w,
+                      vertical: kIsWeb ? 30.h : 5.h),
                   child: FadeInUp(
                     duration: const Duration(milliseconds: 500),
-                    child: kIsWeb 
-                      ? CommonWidget.getCustomCard(
-                          isDark: Theme.of(context).brightness == Brightness.dark,
-                          child: Container(
-                            constraints: BoxConstraints(
-                              minHeight: kIsWeb ? 0.85.sh : 0.85.sh,
+                    child: kIsWeb
+                        ? CommonWidget.getCustomCard(
+                            isDark:
+                                Theme.of(context).brightness == Brightness.dark,
+                            child: Container(
+                              constraints: BoxConstraints(
+                                minHeight: kIsWeb ? 0.85.sh : 0.85.sh,
+                              ),
+                              padding: EdgeInsets.all(kIsWeb ? 20.r : 5.r),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    'Post Your Book',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 30.h),
+                                  FadeInLeft(
+                                      child: SearchableDropdown(
+                                          provider: bookProvider)),
+                                  SizedBox(height: 20.h),
+                                  FadeInRight(
+                                    child:
+                                        DropdownButtonFormField<PostCategory>(
+                                      value: _selectedCategory,
+                                      items:
+                                          PostCategory.values.map((category) {
+                                        return DropdownMenuItem<PostCategory>(
+                                          value: category,
+                                          child: Text(category.displayName),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedCategory = value;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(height: 20.h),
+                                  FadeInLeft(
+                                    child: TextField(
+                                      controller: _captionController,
+                                      maxLines: 1,
+                                      decoration: InputDecoration(
+                                        hintText: 'Write a caption...',
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 20.h),
+                                  FadeInUp(
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Container(
+                                          width: kIsWeb ? 200.w : 200.w,
+                                          height: kIsWeb ? 220.h : 220.h,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                                kIsWeb ? 15 : 10),
+                                            border: Border.all(
+                                                color: Colors.grey[300]!),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.grey
+                                                    .withOpacity(0.3),
+                                                spreadRadius: 2,
+                                                blurRadius: 5,
+                                                offset: Offset(0, 3),
+                                              ),
+                                            ],
+                                          ),
+                                          child: bookProvider.fileData != null
+                                              ? ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                  child: Image.memory(
+                                                    bookProvider.fileData!,
+                                                    width: double.infinity,
+                                                    height: 200.h,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                )
+                                              : Center(
+                                                  child: Icon(
+                                                    Icons.add_photo_alternate,
+                                                    size: 50.r,
+                                                    color: Colors.grey[400],
+                                                  ),
+                                                ),
+                                        ),
+                                        Positioned(
+                                          bottom: kIsWeb ? 10.h : 5.h,
+                                          right: kIsWeb ? 160.w : 50.w,
+                                          child: FloatingActionButton(
+                                            backgroundColor: AppTheme
+                                                .primaryColor
+                                                .withOpacity(0.7),
+                                            mini: true,
+                                            child: Icon(Icons.add_a_photo),
+                                            onPressed: () =>
+                                                _showImageSourceDialog(),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: kIsWeb ? 20.h : 36.h),
+                                  FadeInUp(
+                                    child: ElevatedButton(
+                                      onPressed: () => _postBook(),
+                                      child: Text(
+                                        'Post Book',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            padding: EdgeInsets.all(kIsWeb ? 20.r : 5.r),
+                          )
+                        : Container(
+                            constraints: BoxConstraints(
+                              minHeight: 0.85.sh,
+                            ),
+                            padding: EdgeInsets.all(5.r),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
                                   'Post Your Book',
-                                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                                  color: AppTheme.primaryColor,
-                                  ),
+                                  style:
+                                      Theme.of(context).textTheme.displayMedium,
                                   textAlign: TextAlign.center,
                                 ),
-                                SizedBox(height: 30.h),
+                                SizedBox(height: 36.h),
                                 FadeInLeft(
-                                    child:
-                                        SearchableDropdown(provider: bookProvider)),
+                                    child: SearchableDropdown(
+                                        provider: bookProvider)),
                                 SizedBox(height: 20.h),
                                 FadeInRight(
                                   child: DropdownButtonFormField<PostCategory>(
@@ -134,15 +258,17 @@ class _PostBookPageState extends State<PostBookPage> {
                                     alignment: Alignment.center,
                                     children: [
                                       Container(
-                                        width: kIsWeb ? 200.w : 200.w,
-                                        height: kIsWeb ? 220.h : 220.h,
+                                        width: 200.w,
+                                        height: 220.h,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(kIsWeb ? 15 : 10),
-                                          border:
-                                              Border.all(color: Colors.grey[300]!),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                              color: Colors.grey[300]!),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.grey.withOpacity(0.3),
+                                              color:
+                                                  Colors.grey.withOpacity(0.3),
                                               spreadRadius: 2,
                                               blurRadius: 5,
                                               offset: Offset(0, 3),
@@ -169,140 +295,32 @@ class _PostBookPageState extends State<PostBookPage> {
                                               ),
                                       ),
                                       Positioned(
-                                        bottom: kIsWeb ? 10.h : 5.h,
-                                        right: kIsWeb ? 160.w : 50.w,
+                                        bottom: 5.h,
+                                        right: 50.w,
                                         child: FloatingActionButton(
-                                          backgroundColor: AppTheme.primaryColor.withOpacity(0.5),
+                                          backgroundColor: AppTheme.primaryColor
+                                              .withOpacity(0.7),
                                           mini: true,
                                           child: Icon(Icons.add_a_photo),
-                                          onPressed: () => _showImageSourceDialog(),
+                                          onPressed: () =>
+                                              _showImageSourceDialog(),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: kIsWeb ? 20.h : 36.h),
+                                SizedBox(height: 36.h),
                                 FadeInUp(
                                   child: ElevatedButton(
                                     onPressed: () => _postBook(),
-                                    child: Text('Post Book',),
-                                   
+                                    child: Text(
+                                      'Post Book',
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        )
-                      : Container(
-                          constraints: BoxConstraints(
-                            minHeight: 0.85.sh,
-                          ),
-                          padding: EdgeInsets.all(5.r),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'Post Your Book',
-                                style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                                color: AppTheme.primaryColor,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 36.h),
-                              FadeInLeft(
-                                  child:
-                                      SearchableDropdown(provider: bookProvider)),
-                              SizedBox(height: 20.h),
-                              FadeInRight(
-                                child: DropdownButtonFormField<PostCategory>(
-                                  value: _selectedCategory,
-                                  items: PostCategory.values.map((category) {
-                                    return DropdownMenuItem<PostCategory>(
-                                      value: category,
-                                      child: Text(category.displayName),
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedCategory = value;
-                                    });
-                                  },
-                                ),
-                              ),
-                              SizedBox(height: 20.h),
-                              FadeInLeft(
-                                child: TextField(
-                                  controller: _captionController,
-                                  maxLines: 1,
-                                  decoration: InputDecoration(
-                                    hintText: 'Write a caption...',
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 20.h),
-                              FadeInUp(
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Container(
-                                      width: 200.w,
-                                      height: 220.h,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border:
-                                            Border.all(color: Colors.grey[300]!),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.3),
-                                            spreadRadius: 2,
-                                            blurRadius: 5,
-                                            offset: Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: bookProvider.fileData != null
-                                          ? ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              child: Image.memory(
-                                                bookProvider.fileData!,
-                                                width: double.infinity,
-                                                height: 200.h,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            )
-                                          : Center(
-                                              child: Icon(
-                                                Icons.add_photo_alternate,
-                                                size: 50.r,
-                                                color: Colors.grey[400],
-                                              ),
-                                            ),
-                                    ),
-                                    Positioned(
-                                      bottom: 5.h,
-                                      right: 50.w,
-                                      child: FloatingActionButton(
-                                        backgroundColor: AppTheme.primaryColor.withOpacity(0.5),
-                                        mini: true,
-                                        child: Icon(Icons.add_a_photo),
-                                        onPressed: () => _showImageSourceDialog(),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: 36.h),
-                              FadeInUp(
-                                child: ElevatedButton(
-                                  onPressed: () => _postBook(),
-                                  child: Text('Post Book',),
-                                 
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                   ),
                 ),
               ),
@@ -369,7 +387,7 @@ class _PostBookPageState extends State<PostBookPage> {
           subjects: book.subjects,
           postImage: bookProvider.fileData,
         ));
-        
+
         // Show success message
         CommonUtils.displaySnackbar(
           context: context,
@@ -377,8 +395,9 @@ class _PostBookPageState extends State<PostBookPage> {
           mode: SnackbarMode.success,
         );
 
-     
-        
+        Provider.of<PostProvider>(context, listen: false).clearProfilePosts();
+
+        Provider.of<UserProvider>(context, listen: false).clearUserSetup();
       } catch (e) {
         // Show error message
         CommonUtils.displaySnackbar(

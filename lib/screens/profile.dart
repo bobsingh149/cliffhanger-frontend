@@ -1,15 +1,19 @@
 import 'package:barter_frontend/main.dart';
+import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/models/post_category.dart';
 import 'package:barter_frontend/models/save_request_input.dart';
 import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/provider/post_provider.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
+import 'package:barter_frontend/screens/chat_screen.dart';
 import 'package:barter_frontend/screens/edit_profile.dart';
 import 'package:barter_frontend/screens/home_page.dart';
+import 'package:barter_frontend/screens/main_screen.dart';
 import 'package:barter_frontend/screens/sign_in_page.dart';
 import 'package:barter_frontend/screens/connection_requests_page.dart';
 import 'package:barter_frontend/services/auth_services.dart';
+import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:barter_frontend/widgets/user_post.dart';
@@ -22,8 +26,15 @@ import 'package:provider/provider.dart';
 class ProfilePage extends StatefulWidget {
   static const String routePath = "/profile";
   final String userId;
+  final NavigationPage fromPage;
+  final ContactModel? contact;
 
-  ProfilePage({super.key, required this.userId});
+  ProfilePage({
+    super.key,
+    required this.userId,
+    required this.fromPage,
+    this.contact,
+  });
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -46,6 +57,38 @@ class _ProfilePageState extends State<ProfilePage> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
+          leading: widget.userId != AuthService.getInstance.currentUser!.uid
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+            
+                    if (widget.fromPage == NavigationPage.chat) {
+                      if (widget.contact != null) {
+          
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ChatScreen(contact: widget.contact!),
+                          ),
+                        );
+                      } else {
+                       
+                        Navigator.pop(context);
+                      }
+                    } else {
+                     
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => MainScreen(
+                            initialPage: widget.fromPage,
+                            fromPage: NavigationPage.profile,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                )
+              : null,
           elevation: 0,
           backgroundColor: theme.colorScheme.background,
           title: Text(
@@ -72,10 +115,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     setState(() {
                       isLoading = true;
                     });
+
+                       Provider.of<UserProvider>(context, listen: false)
+                        .clearUserSetup();
+
+                        
                     AuthService.getInstance.signOut();
 
-                    Provider.of<UserProvider>(context, listen: false)
-                        .clearUserSetup();
+                 
 
                     Navigator.of(context).pushNamedAndRemoveUntil(
                       SignInPage.routePath,
@@ -159,7 +206,7 @@ class _ProfilePageState extends State<ProfilePage> {
             : RefreshIndicator(
                 onRefresh: () async {
                   setState(() {
-                    _userPostsFuture = provider!.getUserPosts(widget.userId);
+                    _userPostsFuture = provider.getUserPosts(widget.userId);
                     _userFuture =
                         Provider.of<UserProvider>(context, listen: false)
                             .fetchUser(widget.userId);
@@ -219,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                         body: TabBarView(
                           children: postCategoryList
-                              .map((title) => buildTabContent(title))
+                              .map((title) => buildTabContent(title, posts!))
                               .toList(),
                         ),
                       ),
@@ -231,10 +278,9 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget buildTabContent(PostCategory tabTitle) {
-    List<PostModel> books = Provider.of<PostProvider>(context, listen: false)
-            .profilePosts![tabTitle] ??
-        [];
+  Widget buildTabContent(
+      PostCategory tabTitle, Map<PostCategory, List<PostModel>> posts) {
+    List<PostModel> books = posts[tabTitle] ?? [];
 
     return GridView.builder(
       padding: EdgeInsets.symmetric(
@@ -317,8 +363,10 @@ class UserProfileSection extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                HomePage(filterType: FilterType.userPosts, userIdPosts: user.id, userName: user.name),
+                            builder: (context) => HomePage(
+                                filterType: FilterType.userPosts,
+                                userIdPosts: user.id,
+                                userName: user.name),
                           ),
                         );
                       },

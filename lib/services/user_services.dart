@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:barter_frontend/constants/api_constants.dart';
+import 'package:barter_frontend/exceptions/user_exceptions.dart';
 import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/models/save_conversation_input.dart';
 import 'package:barter_frontend/models/save_request_input.dart';
@@ -42,7 +43,6 @@ class UserService {
   }
 
   Future<void> saveUser(UserModel user, Uint8List? profileImage) async {
-    AppLogger.instance.e('Saving user: $user');
 
     var request = http.MultipartRequest(
         'POST', Uri.parse(ApiRoutePaths.saveUser));
@@ -72,7 +72,7 @@ class UserService {
     }
   }
 
-  Future<GetBookBuddy> getBookBuddy(String userId) async {
+  Future<GetBookBuddy?> getBookBuddy(String userId) async {
     final response = await client.get(
       Uri.parse('${ApiRoutePaths.getBookBuddy}?id=$userId'),
     );
@@ -81,7 +81,13 @@ class UserService {
         throw Exception(ServiceUtils.parseErrorMessage(response));
        }
 
-      return GetBookBuddy.fromJson(ServiceUtils.parseResponse(response)[0]);
+       final data = ServiceUtils.parseResponse(response);
+
+       if(data.isEmpty){
+        return null;
+       }
+
+      return GetBookBuddy.fromJson(data[0]);
 
       
   }
@@ -137,10 +143,10 @@ class UserService {
       Uri.parse('${ApiRoutePaths.getUserSetup}/$userId'),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode < 400) {
       return UserSetupModel.fromJson(ServiceUtils.parseResponse(response));
-    } else if (response.statusCode >= 400) {
-      throw Exception(ServiceUtils.parseErrorMessage(response));
+    } else if (response.statusCode == 404) {
+      throw UserNotFoundException(userId, 'User setup not found');
     } else {
       throw Exception(ServiceUtils.parseErrorMessage(response));
     }
@@ -175,7 +181,7 @@ class UserService {
   }
 
   Future<void> removeRequest(SaveRequestInput input) async {
-    final response = await client.delete(
+    final response = await client.patch(
       Uri.parse(ApiRoutePaths.removeRequest),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(input.toJson()),

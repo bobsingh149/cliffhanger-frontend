@@ -1,6 +1,7 @@
 import 'package:barter_frontend/models/post.dart';
 import 'package:barter_frontend/models/post_category.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
+import 'package:barter_frontend/screens/main_screen.dart';
 import 'package:barter_frontend/screens/profile.dart';
 import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
@@ -37,7 +38,9 @@ class _PostCardState extends State<PostCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: kIsWeb ? EdgeInsets.zero : EdgeInsets.only(left: 5.w,right: 5.w,bottom: 5.h),
+      margin: kIsWeb
+          ? EdgeInsets.zero
+          : EdgeInsets.only(left: 5.w, right: 5.w, bottom: 5.h),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -46,7 +49,8 @@ class _PostCardState extends State<PostCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.w,vertical: kIsWeb ? 5.h : 1.h),
+              padding: EdgeInsets.symmetric(
+                  horizontal: 12.w, vertical: kIsWeb ? 7.h : 1.h),
               child: Row(
                 children: [
                   CircleAvatar(
@@ -68,11 +72,13 @@ class _PostCardState extends State<PostCard> {
                   SizedBox(width: 12.w),
                   InkWell(
                     onTap: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProfilePage(
+                          builder: (context) => MainScreen(
+                            initialPage: NavigationPage.profile,
                             userId: widget.post.userInfo.id,
+                            fromPage: NavigationPage.home,
                           ),
                         ),
                       );
@@ -128,7 +134,7 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
             AspectRatio(
-              aspectRatio: 7/8,
+              aspectRatio: 5 / 6,
               child: CachedNetworkImage(
                 imageUrl: widget.post.postImage ?? widget.post.coverImages![2],
                 // post.postImage ??
@@ -143,7 +149,8 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.only(left: 12.w,right: 12.w,top: 7.h,bottom: 3.h),
+              padding: EdgeInsets.only(
+                  left: 12.w, right: 12.w, top: 7.h, bottom: 3.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -163,10 +170,7 @@ class _PostCardState extends State<PostCard> {
                                 },
                                 child: Text(
                                   widget.post.title,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge,
-        
+                                  style: Theme.of(context).textTheme.bodyLarge,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -336,12 +340,11 @@ class _PostCardState extends State<PostCard> {
                                               Row(
                                                 children: [
                                                   Text(
-                                                    comment.userBasicInfo.name,
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodySmall
-                                                        
-                                                  ),
+                                                      comment
+                                                          .userBasicInfo.name,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall),
                                                   Spacer(),
                                                   Text(
                                                       CommonUtils
@@ -466,10 +469,10 @@ class _PostCardState extends State<PostCard> {
         tagColor = AppTheme.secondaryColor;
         break;
       case PostCategory.barter:
-        tagColor = Colors.pink;
+        tagColor = Colors.green;
         break;
       case PostCategory.favourite:
-        tagColor = Colors.orange;
+        tagColor = Colors.pink;
         break;
     }
 

@@ -1,8 +1,10 @@
+import 'package:barter_frontend/models/save_request_input.dart';
+import 'package:barter_frontend/screens/main_screen.dart';
 import 'package:barter_frontend/screens/profile.dart';
+import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
@@ -11,18 +13,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
-import 'package:barter_frontend/models/save_conversation_input.dart';
-
 
 enum SortOption {
-    time,
-    match,
-  }
-  
+  time,
+  match,
+}
+
 class BookBuddiesScreen extends StatefulWidget {
   static const String routePath = '/book-buddies';
 
-   BookBuddiesScreen({super.key});
+  BookBuddiesScreen({super.key});
 
   @override
   State<BookBuddiesScreen> createState() => _BookBuddiesScreenState();
@@ -60,9 +60,8 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
   }
 
   Color _getScoreColor(BuildContext context, int score) {
-    final theme = Theme.of(context);
-    if (score >= 70) return Colors.green;
-    if (score >= 40) return Colors.orange;
+    if (score >= 30) return Colors.green;
+    if (score >= 15) return Colors.orange;
     return Colors.red;
   }
 
@@ -71,10 +70,10 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
   }
 
   Widget _buildSortedByMatchList(List<BookBuddy> buddies, ThemeData theme) {
+    final UserProvider _userProvider = Provider.of<UserProvider>(context, listen: false);
     Widget buddiesList = RefreshIndicator(
       onRefresh: () async {
-        await Provider.of<UserProvider>(context, listen: false)
-            .getBookBuddies(forceRefresh: true);
+        _userProvider.clearUserSetup();
       },
       child: ListView.builder(
         padding: EdgeInsets.only(
@@ -119,7 +118,8 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                     ),
                     child: CircleAvatar(
                       radius: 30,
-                      backgroundColor: theme.colorScheme.secondary.withOpacity(0.2),
+                      backgroundColor:
+                          theme.colorScheme.secondary.withOpacity(0.2),
                       child: ClipOval(
                         child: buddy.userInfo.profileImage != null
                             ? CachedNetworkImage(
@@ -138,7 +138,6 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                     ),
                   ),
                   SizedBox(width: 16.w),
-
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,12 +145,13 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                       children: [
                         InkWell(
                           onTap: () {
-                            Navigator.push(
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ProfilePage(
-                                  userId: buddy.userInfo.id,
-                                ),
+                                builder: (context) => MainScreen(
+                                    initialPage: NavigationPage.profile,
+                                    userId: buddy.userInfo.id,
+                                    fromPage: NavigationPage.bookBuddies),
                               ),
                             );
                           },
@@ -178,7 +178,8 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                             vertical: 2.h,
                           ),
                           decoration: BoxDecoration(
-                            color: _getScoreColor(context, buddy.commonSubjectCount)
+                            color: _getScoreColor(
+                                    context, buddy.commonSubjectCount)
                                 .withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -188,13 +189,15 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                               Icon(
                                 Icons.auto_awesome,
                                 size: 14,
-                                color: _getScoreColor(context, buddy.commonSubjectCount),
+                                color: _getScoreColor(
+                                    context, buddy.commonSubjectCount),
                               ),
                               SizedBox(width: 4.w),
                               Text(
                                 '${buddy.commonSubjectCount}% Book Match',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: _getScoreColor(context, buddy.commonSubjectCount),
+                                  color: _getScoreColor(
+                                      context, buddy.commonSubjectCount),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -204,7 +207,6 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                       ],
                     ),
                   ),
-
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -221,27 +223,32 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                                   setState(() {
                                     _loadingStates[buddy.userInfo.id] = true;
                                   });
-                                  
-                                  final userProvider = Provider.of<UserProvider>(context, listen: false);
-                                  final input = SaveConversationInput(
-                                    isGroup: false,
-                                    userId: buddy.userInfo.id,
+
+                                  final currentUserId =
+                                      AuthService.getInstance.currentUser!.uid;
+                                  final requestInput = SaveRequestInput(
+                                    id: currentUserId,
+                                    requestId: buddy.userInfo.id,
                                   );
 
-                                  await userProvider.saveConnection(input);
-
+                                  
                                   if (context.mounted) {
                                     CommonUtils.displaySnackbar(
                                       context: context,
-                                      message: 'Connection request sent successfully',
+                                      message:
+                                          'Connection request sent successfully',
                                       mode: SnackbarMode.success,
                                     );
                                   }
+
+                                  await _userProvider.saveRequest(requestInput);
+
                                 } catch (e) {
                                   if (context.mounted) {
                                     CommonUtils.displaySnackbar(
                                       context: context,
-                                      message: 'Failed to send connection request',
+                                      message:
+                                          'Failed to send connection request',
                                       mode: SnackbarMode.error,
                                     );
                                   }
@@ -278,7 +285,8 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider _userProvider = Provider.of<UserProvider>(context, listen: false);
+    final UserProvider _userProvider =
+        Provider.of<UserProvider>(context, listen: false);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -360,14 +368,15 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
               return Center(
                 child: Text(
                   'You have no book buddies yet',
-                  style: theme.textTheme.bodyLarge,
+                  style: theme.textTheme.bodyMedium,
                 ),
               );
             }
 
             if (_currentSort == SortOption.match) {
-              bookBuddies.sort((a, b) => b.commonSubjectCount.compareTo(a.commonSubjectCount));
-              
+              bookBuddies.sort((a, b) =>
+                  b.commonSubjectCount.compareTo(a.commonSubjectCount));
+
               return _buildSortedByMatchList(bookBuddies, theme);
             }
 
@@ -386,13 +395,13 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
 
             Widget buddiesList = RefreshIndicator(
               onRefresh: () async {
-                await _userProvider.getBookBuddies(forceRefresh: true);
+                _userProvider.clearUserSetup();
               },
               child: ListView.builder(
                 padding: EdgeInsets.only(
                   top: 12.h,
-                  left: kIsWeb ? 16.w : 0.w,
-                  right: kIsWeb ? 16.w : 0.w,
+                  left: kIsWeb ? 16.w : 2.w,
+                  right: kIsWeb ? 16.w : 2.w,
                 ),
                 itemCount: sortedDates.length,
                 itemBuilder: (context, dateIndex) {
@@ -425,7 +434,9 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                                   side: BorderSide(
                                     color: theme.colorScheme.outline
                                         .withOpacity(0.1),
-                                    width: theme.brightness == Brightness.dark ? 1.0 : 0.5,
+                                    width: theme.brightness == Brightness.dark
+                                        ? 1.0
+                                        : 0.5,
                                   ),
                                 ),
                                 child: Padding(
@@ -454,7 +465,8 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                                               .colorScheme.secondary
                                               .withOpacity(0.2),
                                           child: ClipOval(
-                                            child: buddy.userInfo.profileImage !=
+                                            child: buddy.userInfo
+                                                        .profileImage !=
                                                     null
                                                 ? CachedNetworkImage(
                                                     imageUrl: buddy
@@ -462,7 +474,8 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                                                     width: 60,
                                                     height: 60,
                                                     fit: BoxFit.cover,
-                                                    placeholder: (context, url) =>
+                                                    placeholder: (context,
+                                                            url) =>
                                                         const CircularProgressIndicator(
                                                             strokeWidth: 2),
                                                     errorWidget: (context, url,
@@ -486,27 +499,33 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                                           children: [
                                             InkWell(
                                               onTap: () {
-                                                Navigator.push(
+                                                Navigator.pushReplacement(
                                                   context,
                                                   MaterialPageRoute(
-                                                    builder: (context) => ProfilePage(
+                                                    builder: (context) =>
+                                                        MainScreen(
+                                                      initialPage:
+                                                          NavigationPage
+                                                              .profile,
                                                       userId: buddy.userInfo.id,
+                                                      fromPage: NavigationPage
+                                                          .bookBuddies,
                                                     ),
                                                   ),
                                                 );
                                               },
-                                              child: Text(
-                                                buddy.userInfo.name,
-                                                style: theme.textTheme.titleMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
+                                              child: Text(buddy.userInfo.name,
+                                                  style: theme
+                                                      .textTheme.titleLarge),
                                             ),
                                             SizedBox(height: 4.h),
                                             Text(
                                               buddy.userInfo.bio ?? '',
-                                              style: theme.textTheme.bodySmall?.copyWith(
-                                                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                color: theme
+                                                    .colorScheme.onSurface
+                                                    .withOpacity(0.7),
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -518,9 +537,13 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                                                 vertical: 2.h,
                                               ),
                                               decoration: BoxDecoration(
-                                                color: _getScoreColor(context, buddy.commonSubjectCount)
+                                                color: _getScoreColor(
+                                                        context,
+                                                        buddy
+                                                            .commonSubjectCount)
                                                     .withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -528,14 +551,23 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                                                   Icon(
                                                     Icons.auto_awesome,
                                                     size: 14,
-                                                    color: _getScoreColor(context, buddy.commonSubjectCount),
+                                                    color: _getScoreColor(
+                                                        context,
+                                                        buddy
+                                                            .commonSubjectCount),
                                                   ),
                                                   SizedBox(width: 4.w),
                                                   Text(
                                                     '${buddy.commonSubjectCount}% Book Match',
-                                                    style: theme.textTheme.bodySmall?.copyWith(
-                                                      color: _getScoreColor(context, buddy.commonSubjectCount),
-                                                      fontWeight: FontWeight.w500,
+                                                    style: theme
+                                                        .textTheme.bodySmall
+                                                        ?.copyWith(
+                                                      color: _getScoreColor(
+                                                          context,
+                                                          buddy
+                                                              .commonSubjectCount),
+                                                      fontWeight:
+                                                          FontWeight.w500,
                                                     ),
                                                   ),
                                                 ],
@@ -550,47 +582,73 @@ class _BookBuddiesScreenState extends State<BookBuddiesScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           IconButton(
-                                            icon: _loadingStates[buddy.userInfo.id] == true
+                                            icon: _loadingStates[
+                                                        buddy.userInfo.id] ==
+                                                    true
                                                 ? CommonWidget.getButtonLoader()
-                                                : const Icon(Icons.person_add_rounded, size: 24),
+                                                : const Icon(
+                                                    Icons.person_add_rounded,
+                                                    size: 24),
                                             color: theme.colorScheme.primary
                                                 .withOpacity(0.8),
                                             tooltip: 'Connect',
-                                            onPressed: _loadingStates[buddy.userInfo.id] == true
+                                            onPressed: _loadingStates[
+                                                        buddy.userInfo.id] ==
+                                                    true
                                                 ? null
                                                 : () async {
                                                     try {
                                                       setState(() {
-                                                        _loadingStates[buddy.userInfo.id] = true;
+                                                        _loadingStates[buddy
+                                                            .userInfo
+                                                            .id] = true;
                                                       });
-                                                      
-                                                      final userProvider = Provider.of<UserProvider>(context, listen: false);
-                                                      final input = SaveConversationInput(
-                                                        isGroup: false,
-                                                        userId: buddy.userInfo.id,
+
+                                                      final currentUserId =
+                                                          AuthService
+                                                              .getInstance
+                                                              .currentUser!
+                                                              .uid;
+                                                      final requestInput =
+                                                          SaveRequestInput(
+                                                        id: currentUserId,
+                                                        requestId:
+                                                            buddy.userInfo.id,
                                                       );
- if (context.mounted) {
-                                                        CommonUtils.displaySnackbar(
+
+                                                       if (context.mounted) {
+                                                        CommonUtils
+                                                            .displaySnackbar(
                                                           context: context,
-                                                          message: 'Sending Connection request',
-                                                          mode: SnackbarMode.success,
+                                                          message:
+                                                              'Connection request sent successfully',
+                                                          mode: SnackbarMode
+                                                              .success,
                                                         );
                                                       }
-                                                      await userProvider.saveConnection(input);
+
+                                                      await _userProvider
+                                                          .saveRequest(
+                                                              requestInput);
 
                                                      
                                                     } catch (e) {
                                                       if (context.mounted) {
-                                                        CommonUtils.displaySnackbar(
+                                                        CommonUtils
+                                                            .displaySnackbar(
                                                           context: context,
-                                                          message: 'Failed to send connection request',
-                                                          mode: SnackbarMode.error,
+                                                          message:
+                                                              'Failed to send connection request',
+                                                          mode: SnackbarMode
+                                                              .error,
                                                         );
                                                       }
                                                     } finally {
                                                       if (mounted) {
                                                         setState(() {
-                                                          _loadingStates[buddy.userInfo.id] = false;
+                                                          _loadingStates[buddy
+                                                              .userInfo
+                                                              .id] = false;
                                                         });
                                                       }
                                                     }

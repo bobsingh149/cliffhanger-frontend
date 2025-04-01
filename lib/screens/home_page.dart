@@ -1,4 +1,5 @@
 import 'package:barter_frontend/exceptions/user_exceptions.dart';
+import 'package:barter_frontend/models/save_request_input.dart';
 import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/models/user_setup.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
@@ -17,7 +18,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_swipe_tutorial/flutter_swipe_tutorial.dart';
 import 'dart:math' as math;
 
-import 'package:barter_frontend/widgets/search_bar.dart';
 import 'package:barter_frontend/provider/book_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart'; // Add this import
@@ -25,16 +25,18 @@ import 'package:barter_frontend/widgets/post_card.dart'; // Add this import
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:barter_frontend/provider/post_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:barter_frontend/screens/connection_requests_page.dart';
 
 // Add this new widget at the top of the file, outside the HomePage class
 class WebSearchBar extends StatefulWidget {
   final BookProvider provider;
   final Function(String) onSearch;
+  final TextEditingController? searchController;
 
   const WebSearchBar({
     required this.provider,
     required this.onSearch,
+    this.searchController,
     super.key,
   });
 
@@ -48,13 +50,14 @@ class _WebSearchBarState extends State<WebSearchBar> {
   @override
   Widget build(BuildContext context) {
     return _showSearchBar
-        ? Container(
-            width: 300.w,
+        ? SizedBox(
+            width: 500.w,
             child: Row(
               children: [
                 Expanded(
                   child: SearchTextField(
                     onSearch: widget.onSearch,
+                    controller: widget.searchController,
                   ),
                 ),
                 SizedBox(width: 8.w),
@@ -64,7 +67,7 @@ class _WebSearchBarState extends State<WebSearchBar> {
                       _showSearchBar = false;
                     });
                   },
-                  child: Icon(Icons.chevron_left, size: 24),
+                  child: const Icon(Icons.chevron_left, size: 24),
                 ),
               ],
             ),
@@ -84,12 +87,12 @@ class _WebSearchBarState extends State<WebSearchBar> {
 class WebAppBarContent extends StatefulWidget {
   final bool onlyBarter;
   final Function(bool) onBarterChanged;
-  final Future<UserModel?> Function(BuildContext, UserProvider)
-      onBookBuddyPressed;
+  final Future<void> Function(BuildContext, UserProvider) onBookBuddyPressed;
   final UserProvider userProvider;
   final Function(String) onSearch;
   final FilterType filterType;
   final String? userName;
+  final TextEditingController? searchController;
 
   const WebAppBarContent({
     required this.onlyBarter,
@@ -99,6 +102,7 @@ class WebAppBarContent extends StatefulWidget {
     required this.onSearch,
     required this.filterType,
     this.userName,
+    this.searchController,
     super.key,
   });
 
@@ -111,7 +115,7 @@ class _WebAppBarContentState extends State<WebAppBarContent> {
   Widget build(BuildContext context) {
     if (widget.filterType == FilterType.userPosts) {
       return Padding(
-        padding: EdgeInsets.only(top: 10.h),
+        padding: EdgeInsets.only(top: 12.h),
         child: Row(
           children: [
             IconButton(
@@ -136,43 +140,16 @@ class _WebAppBarContentState extends State<WebAppBarContent> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  FutureBuilder<UserSetupModel>(
-                    future: widget.userProvider
-                        .getUserSetup(AuthService.getInstance.currentUser!.uid),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Text('Loading...');
-                      }
-
-                      if (snapshot.hasError) {
-                        if (snapshot.error is UserNotFoundException) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            Navigator.of(context)
-                                .pushReplacementNamed(OnboardingPage.routePath);
-                          });
-                          return const Text('Redirecting...');
-                        }
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          CommonUtils.displaySnackbar(
-                            context: context,
-                            message: 'Could not load user information',
-                            mode: SnackbarMode.error,
-                          );
-                        });
-                        return Center(child: Text('Error loading user'));
-                      }
-
-                      return Text(
-                        '${snapshot.data?.name ?? 'Loading...'}\'s Feed',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      );
-                    },
+                  Text(
+                    'My Feed',
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   SizedBox(width: 16.w),
                   WebSearchBar(
                       provider:
                           Provider.of<BookProvider>(context, listen: false),
-                      onSearch: widget.onSearch),
+                      onSearch: widget.onSearch,
+                      searchController: widget.searchController),
                 ],
               ),
             ),
@@ -204,12 +181,12 @@ class _WebAppBarContentState extends State<WebAppBarContent> {
 class MobileAppBarContent extends StatefulWidget {
   final bool onlyBarter;
   final Function(bool) onBarterChanged;
-  final Future<UserModel?> Function(BuildContext, UserProvider)
-      onBookBuddyPressed;
+  final Future<void> Function(BuildContext, UserProvider) onBookBuddyPressed;
   final UserProvider userProvider;
   final Function(String) onSearch;
   final FilterType filterType;
   final String? userName;
+  final TextEditingController? searchController;
 
   const MobileAppBarContent({
     required this.onlyBarter,
@@ -219,6 +196,7 @@ class MobileAppBarContent extends StatefulWidget {
     required this.onSearch,
     required this.filterType,
     this.userName,
+    this.searchController,
     super.key,
   });
 
@@ -233,7 +211,7 @@ class _MobileAppBarContentState extends State<MobileAppBarContent> {
   Widget build(BuildContext context) {
     if (widget.filterType == FilterType.userPosts) {
       return Padding(
-        padding: EdgeInsets.only(top: 10.h),
+        padding: EdgeInsets.only(top: 25.h),
         child: Row(
           children: [
             IconButton(
@@ -259,45 +237,8 @@ class _MobileAppBarContentState extends State<MobileAppBarContent> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    FutureBuilder<UserSetupModel>(
-                      future: widget.userProvider.getUserSetup(
-                          AuthService.getInstance.currentUser!.uid),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Text('Loading...');
-                        }
-
-                        if (snapshot.hasError) {
-                          if (snapshot.error is UserNotFoundException) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              Navigator.of(context).pushReplacementNamed(
-                                  OnboardingPage.routePath);
-                            });
-                            return const Text('Redirecting...');
-                          }
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            CommonUtils.displaySnackbar(
-                              context: context,
-                              message: 'Could not load user information',
-                              mode: SnackbarMode.error,
-                            );
-                          });
-                          return Center(child: Text('Error loading user'));
-                        }
-
-                        final firstName =
-                            snapshot.data?.name?.split(' ')[0] ?? 'Loading...';
-
-                        return Text(
-                          '$firstName\'s Feed',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(fontSize: 20),
-                        );
-                      },
-                    ),
+                    Text('My Feed',
+                        style: Theme.of(context).textTheme.bodyLarge),
                     SizedBox(width: 16.w),
                     if (!_showMobileSearchBar)
                       InkWell(
@@ -309,6 +250,18 @@ class _MobileAppBarContentState extends State<MobileAppBarContent> {
                   ],
                 ),
               ),
+            ),
+            IconButton(
+              icon: FaIcon(
+                FontAwesomeIcons.bell,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppTheme.textColorDark
+                    : AppTheme.textColorLight,
+                size: 25,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, ConnectionRequestsPage.routePath);
+              },
             ),
             BookBuddyButton(
               onBookBuddyPressed: widget.onBookBuddyPressed,
@@ -324,6 +277,7 @@ class _MobileAppBarContentState extends State<MobileAppBarContent> {
                 Expanded(
                   child: SearchTextField(
                     onSearch: widget.onSearch,
+                    controller: widget.searchController,
                   ),
                 ),
                 Row(
@@ -362,8 +316,8 @@ class BookBuddyDialog extends StatelessWidget {
   const BookBuddyDialog({required this.bookBuddy, super.key});
 
   Color _getScoreColor(BuildContext context, int score) {
-    if (score >= 70) return Colors.green;
-    if (score >= 40) return Colors.orange;
+    if (score >= 30) return Colors.green;
+    if (score >= 15) return Colors.orange;
     return Colors.red;
   }
 
@@ -446,9 +400,36 @@ class BookBuddyDialog extends StatelessWidget {
             ),
             SizedBox(height: 24.h),
             ElevatedButton(
-              onPressed: () {
-                // TODO: Implement connect functionality
-                Navigator.pop(context);
+              onPressed: () async {
+                try {
+                  final currentUserId =
+                      AuthService.getInstance.currentUser!.uid;
+                  final requestInput = SaveRequestInput(
+                    id: currentUserId,
+                    requestId: bookBuddy.id,
+                  );
+
+                  await Provider.of<UserProvider>(context, listen: false)
+                      .saveRequest(requestInput);
+
+                  Navigator.pop(context);
+
+                  if (context.mounted) {
+                    CommonUtils.displaySnackbar(
+                      context: context,
+                      message: 'Connection request sent successfully!',
+                      mode: SnackbarMode.success,
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    CommonUtils.displaySnackbar(
+                      context: context,
+                      message: 'Failed to send connection request: $e',
+                      mode: SnackbarMode.error,
+                    );
+                  }
+                }
               },
               child: Text('Connect'),
             ),
@@ -461,9 +442,11 @@ class BookBuddyDialog extends StatelessWidget {
 
 class SearchTextField extends StatefulWidget {
   final Function(String) onSearch;
+  final TextEditingController? controller;
 
   const SearchTextField({
     required this.onSearch,
+    this.controller,
     super.key,
   });
 
@@ -472,16 +455,26 @@ class SearchTextField extends StatefulWidget {
 }
 
 class _SearchTextFieldState extends State<SearchTextField> {
-  final TextEditingController _controller = TextEditingController();
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller ?? TextEditingController();
+  }
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 
   void _handleSearch() {
     if (_controller.text.isNotEmpty) {
+      // Dismiss keyboard
+      FocusScope.of(context).unfocus();
       widget.onSearch(_controller.text);
     }
   }
@@ -492,8 +485,9 @@ class _SearchTextFieldState extends State<SearchTextField> {
       height: 36.h,
       child: TextField(
         controller: _controller,
+        textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: 'Search your Book',
+          hintText: 'Search feed',
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -527,15 +521,18 @@ class _SearchTextFieldState extends State<SearchTextField> {
             borderSide: BorderSide(color: AppTheme.primaryColor),
           ),
         ),
-        onSubmitted: (value) => _handleSearch(),
+        onSubmitted: (value) {
+          if (value.isNotEmpty) {
+            _handleSearch();
+          }
+        },
       ),
     );
   }
 }
 
 class BookBuddyButton extends StatefulWidget {
-  final Future<UserModel?> Function(BuildContext, UserProvider)
-      onBookBuddyPressed;
+  final Future<void> Function(BuildContext, UserProvider) onBookBuddyPressed;
   final UserProvider userProvider;
 
   const BookBuddyButton({
@@ -562,7 +559,9 @@ class _BookBuddyButtonState extends State<BookBuddyButton> {
                 setState(() => _isLoadingBuddy = false);
               },
         style: TextButton.styleFrom(
-          padding: EdgeInsets.symmetric(horizontal: 12),
+          padding: kIsWeb
+              ? EdgeInsets.symmetric(horizontal: 12)
+              : EdgeInsets.symmetric(horizontal: 7, vertical: 3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(
@@ -594,8 +593,9 @@ class _BookBuddyButtonState extends State<BookBuddyButton> {
                 ],
               )
             : Text(
-                'Get Book Buddy',
+                'Book Buddy',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 14,
                       color: AppTheme.primaryColor,
                     ),
               ));
@@ -623,16 +623,13 @@ class _HomePageState extends State<HomePage> {
   bool _onlyBarter = false;
   FilterType? _filterType;
 
-  late Future<bool> _isFirstTimeUser;
-
   late Future<List<PostModel>> _postsFuture;
 
   final ScrollController _scrollController =
       ScrollController(keepScrollOffset: true);
   bool _isLoadingMore = false;
 
-  final double _loadMoreThreshold = 0.7;
-  final int _pageSize = 3;
+  final int _pageSize = 10;
 
   int _pageKey = 0;
 
@@ -641,6 +638,10 @@ class _HomePageState extends State<HomePage> {
   String _searchQuery = '';
 
   int cardIndex = 0;
+
+  final TextEditingController _searchController = TextEditingController();
+
+  final CardSwiperController _cardSwiperController = CardSwiperController();
 
   @override
   void initState() {
@@ -684,6 +685,8 @@ class _HomePageState extends State<HomePage> {
   void onBarterChanged(bool value) {
     setState(() {
       _onlyBarter = value;
+      resetPagination();
+
       _filterType = value ? FilterType.barter : FilterType.all;
       final city = Provider.of<UserProvider>(context, listen: false).user?.city;
       _postsFuture = Provider.of<PostProvider>(context, listen: false)
@@ -693,8 +696,6 @@ class _HomePageState extends State<HomePage> {
               city: city,
               page: _pageKey,
               size: _pageSize);
-
-      resetPagination();
     });
   }
 
@@ -704,6 +705,7 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _searchQuery = query;
+      resetPagination();
       _filterType = FilterType.search;
       _postsFuture = Provider.of<PostProvider>(context, listen: false)
           .getFeedPosts(
@@ -712,13 +714,14 @@ class _HomePageState extends State<HomePage> {
               searchQuery: query,
               page: _pageKey,
               size: _pageSize);
-      resetPagination();
     });
   }
 
   void _clearSearch() {
     setState(() {
       _searchQuery = '';
+      _searchController.clear();
+      resetPagination();
       _filterType = FilterType.all;
       _postsFuture = Provider.of<PostProvider>(context, listen: false)
           .getFeedPosts(
@@ -726,7 +729,6 @@ class _HomePageState extends State<HomePage> {
               userId: AuthService.getInstance.currentUser!.uid,
               page: _pageKey,
               size: _pageSize);
-      resetPagination();
     });
   }
 
@@ -752,6 +754,7 @@ class _HomePageState extends State<HomePage> {
                     onSearch: _handleSearch,
                     filterType: _filterType!,
                     userName: widget.userName,
+                    searchController: _searchController,
                   )
                 : MobileAppBarContent(
                     onlyBarter: _onlyBarter,
@@ -761,6 +764,7 @@ class _HomePageState extends State<HomePage> {
                     onSearch: _handleSearch,
                     filterType: _filterType!,
                     userName: widget.userName,
+                    searchController: _searchController,
                   ),
           ),
 
@@ -797,10 +801,21 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                // TODO: Implement refresh logic
+                setState(() {
+                  resetPagination();
+
+                  _filterType = FilterType.all;
+                  _postsFuture =
+                      Provider.of<PostProvider>(context, listen: false)
+                          .getFeedPosts(
+                              filterType: _filterType!,
+                              userId: AuthService.getInstance.currentUser!.uid,
+                              page: _pageKey,
+                              size: _pageSize);
+                });
               },
               child: FutureBuilder<dynamic>(
-                future: Future.wait([_postsFuture,_getFirstTimeUser()]),
+                future: Future.wait([_postsFuture, _getFirstTimeUser()]),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CommonWidget.getLoader();
@@ -818,10 +833,15 @@ class _HomePageState extends State<HomePage> {
                   }
 
                   posts = snapshot.data?[0] ?? [];
+
+                  if (posts.length < _pageSize) {
+                    _hasMoreItems = false;
+                  }
+
                   final firstTimeUser = snapshot.data?[1] ?? false;
 
                   if (posts.isEmpty) {
-                    return Center(child: Text('No posts available'));
+                    return const Center(child: Text('No posts available'));
                   }
 
                   return kIsWeb
@@ -832,7 +852,9 @@ class _HomePageState extends State<HomePage> {
                           child: ListView.separated(
                             key: const PageStorageKey('feed-list'),
                             padding: EdgeInsets.symmetric(
-                                horizontal: 300.w, vertical: 5.h),
+                                horizontal:
+                                    widget.userIdPosts != null ? 430.w : 300.w,
+                                vertical: 5.h),
                             itemCount: posts.length + 1,
                             controller: _scrollController,
                             separatorBuilder: (context, index) =>
@@ -840,7 +862,7 @@ class _HomePageState extends State<HomePage> {
                             itemBuilder: (context, index) {
                               if (index == posts.length) {
                                 return _isLoading
-                                    ? Padding(
+                                    ? const Padding(
                                         padding: EdgeInsets.all(16.0),
                                         child: Center(
                                             child: CircularProgressIndicator()),
@@ -857,11 +879,14 @@ class _HomePageState extends State<HomePage> {
                           ? Center(child: Text('No posts available'))
                           : CardSwiper(
                               cardsCount: posts.length,
-                              onEnd: (){setState(() {
-                                cardIndex=0;
-                              });},
+                              onEnd: () {
+                                setState(() {
+                                  cardIndex = 0;
+                                });
+                              },
                               cardBuilder: (context, index, percentThresholdX,
                                   percentThresholdY) {
+
                                 if (index == posts.length - 1) {
                                   _loadMorePosts();
                                 }
@@ -889,11 +914,11 @@ class _HomePageState extends State<HomePage> {
                               numberOfCardsDisplayed: posts.length > 1 ? 2 : 1,
                               backCardOffset: const Offset(0, 0),
                               isLoop: false,
-
                               padding: EdgeInsets.symmetric(
                                   horizontal: 0.w, vertical: 0.h),
                               duration: const Duration(milliseconds: 200),
                               threshold: 30,
+                              controller: _cardSwiperController,
                               allowedSwipeDirection:
                                   const AllowedSwipeDirection.symmetric(
                                       horizontal: true, vertical: false),
@@ -909,17 +934,86 @@ class _HomePageState extends State<HomePage> {
 
   bool _onSwipe(int previousIndex, int? currentIndex,
       CardSwiperDirection direction, List<PostModel> posts) {
-    if (direction == CardSwiperDirection.bottom) {
-    } else if (direction == CardSwiperDirection.top) {}
-    return true;
+  
+    if (direction == CardSwiperDirection.left) {
+      return true;
+    }
+
+    if(direction == CardSwiperDirection.right){
+      _cardSwiperController.moveTo(math.max(0, previousIndex-1));
+    }
+
+    return false;
   }
 
-  Future<UserModel?> showBookBuddyDialog(
+  Future<void> showBookBuddyDialog(
       BuildContext context, UserProvider userProvider) async {
     final GetBookBuddy? bookBuddy = await userProvider.getBookBuddy();
 
     AppLogger.instance.i('bookBuddy: ${bookBuddy?.name}');
-    if (bookBuddy != null && context.mounted) {
+
+    if (bookBuddy == null) {
+      if (context.mounted) {
+        showGeneralDialog(
+          context: context,
+          pageBuilder: (_, __, ___) => Container(),
+          transitionBuilder: (context, animation, secondaryAnimation, child) {
+            return ScaleTransition(
+              scale: Tween<double>(begin: 0.5, end: 1.0).animate(
+                CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOut,
+                ),
+              ),
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                content: Container(
+                  width: kIsWeb ? 400.w : double.infinity,
+                  constraints: BoxConstraints(
+                    maxWidth: kIsWeb ? 400.w : 300.w,
+                    maxHeight: kIsWeb ? 200.h : 150.h,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.sentiment_dissatisfied,
+                        size: 48,
+                        color: Colors.grey,
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Sorry! No Book Buddy Found',
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'Please try again tomorrow!',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        );
+      }
+      return;
+    }
+
+    if (context.mounted) {
       showGeneralDialog(
         context: context,
         pageBuilder: (_, __, ___) => Container(),
@@ -942,12 +1036,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadMorePosts() async {
-    if (_isLoading || !_hasMoreItems) return;
+    if (_isLoading || !_hasMoreItems || _filterType == FilterType.userPosts)
+      return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
@@ -1010,6 +1106,7 @@ class _HomePageState extends State<HomePage> {
   void resetPagination() {
     _pageKey = 0;
     _hasMoreItems = true;
+    cardIndex = 0;
     posts.clear();
   }
 }

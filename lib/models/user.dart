@@ -66,27 +66,26 @@ class BookBuddy {
       'timestamp': requestTime.toIso8601String(),
       'commonSubjectCount': commonSubjectCount,
     };
-  }  
-
+  }
 }
 
 class GetBookBuddy {
   final String id;
   final String name;
-  final int age;
-  final String bio;
-  final String city;
-  final String profileImage;
+  final int? age;
+  final String? bio;
+  final String? city;
+  final String? profileImage;
   final int commonSubjectCount;
 
   GetBookBuddy({
     required this.id,
     required this.name,
-    required this.age,
-    required this.bio,
-    required this.city,
-    required this.profileImage,
-    required this.commonSubjectCount,
+    this.age,
+    this.bio,
+    this.city,
+    this.profileImage,
+    this.commonSubjectCount = 0,
   });
 
   factory GetBookBuddy.fromJson(Map<String, dynamic> json) {
@@ -97,7 +96,7 @@ class GetBookBuddy {
       bio: json['bio'],
       city: json['city'],
       profileImage: json['profileImage'],
-      commonSubjectCount: json['commonSubjectCount'],
+      commonSubjectCount: json['commonSubjectCount'] ?? 0,
     );
   }
 

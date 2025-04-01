@@ -4,9 +4,6 @@ import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/services/post_service.dart';
 import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:flutter/material.dart';
-import 'package:barter_frontend/constants/api_constants.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class PostProvider with ChangeNotifier {
   final AppLogger _logger = AppLogger.instance;
@@ -16,31 +13,43 @@ class PostProvider with ChangeNotifier {
   PostProvider({PostService? postService})
       : _postService = postService ?? PostService.getInstance;
 
-  Map<PostCategory, List<PostModel>>? _proflePosts;
 
-  Map<PostCategory, List<PostModel>>? get profilePosts {
-    return _proflePosts;
+  Map<PostCategory, List<PostModel>>? currentUserPosts;
+
+  Map<PostCategory, List<PostModel>>? get currentUserProfilePosts {
+    return currentUserPosts;
   }
-
+  
   Future<Map<PostCategory, List<PostModel>>?> getUserPosts(
       String userId) async {
+   
+   if(userId == AuthService.getInstance.currentUser!.uid && currentUserPosts !=null){
+    return currentUserPosts;
+   }
+
     try {
-      _proflePosts = {};
+
+      Map<PostCategory, List<PostModel>> proflePosts = {};
+      
       for (var category in postCategoryList) {
-        _proflePosts![category] = [];
+        proflePosts[category] = [];
       }
 
       final posts = await _postService.getPostsByUser(userId);
 
       for (var post in posts) {
-        _proflePosts![post.category]!.add(post);
+        proflePosts[post.category]!.add(post);
       }
 
-      return _proflePosts;
+      if(userId == AuthService.getInstance.currentUser!.uid){
+        currentUserPosts = proflePosts;
+      }
+
+      return proflePosts;
     } catch (err) {
       _logger.e(err);
       rethrow;
-    }
+    } 
   }
 
   Future<List<PostModel>> getFeedPosts({
@@ -65,15 +74,17 @@ class PostProvider with ChangeNotifier {
           break;
 
         case FilterType.userPosts:
+          if (userIdPosts == null) {
+            throw Exception('User ID is required');
+          }
 
-          if (userIdPosts == null) throw Exception('User ID is required');
-        
-          newPosts = await _postService.getPostsByUser(userIdPosts!);
+          newPosts = await _postService.getPostsByUser(userIdPosts);
           break;
 
         case FilterType.barter:
-          if (city == null)
+          if (city == null) {
             throw Exception('City is required for barter filter');
+          }
           newPosts = await _postService.getBarterPosts(
             userId,
             city: city,
@@ -83,7 +94,9 @@ class PostProvider with ChangeNotifier {
           break;
 
         case FilterType.search:
-          if (searchQuery == null) throw Exception('Search query is required');
+          if (searchQuery == null) {
+            throw Exception('Search query is required');
+          }
           newPosts = await _postService.searchPosts(
             userId,
             searchQuery: searchQuery,
@@ -145,5 +158,9 @@ class PostProvider with ChangeNotifier {
       _logger.e(err);
       rethrow;
     }
+  }
+
+  void clearProfilePosts() {
+    currentUserPosts = null;
   }
 }

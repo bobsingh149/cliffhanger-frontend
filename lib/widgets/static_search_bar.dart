@@ -1,12 +1,9 @@
-import 'dart:async';
-
 import 'package:barter_frontend/constants/constant_data.dart';
-import 'package:barter_frontend/models/post.dart';
-import 'package:barter_frontend/provider/book_provider.dart';
-import 'package:barter_frontend/widgets/common_widgets.dart';
+import 'package:barter_frontend/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class StaticSearchbar extends StatefulWidget {
   final Function(String) onItemSelected;
@@ -101,7 +98,7 @@ class _StaticSearchbarState extends State<StaticSearchbar> {
           ),
           Positioned(
             left: offset.dx,
-            top: offset.dy + size.height,
+            top: kIsWeb ? offset.dy + size.height : offset.dy - 230.h,
             width: size.width,
             child: Material(
               elevation: 2,
@@ -146,6 +143,8 @@ class _StaticSearchbarState extends State<StaticSearchbar> {
       widget.onItemSelected(_selectedCity!);
       if (_isDropdownOpen) _closeDropdown();
     });
+    // Dismiss keyboard
+    FocusManager.instance.primaryFocus?.unfocus();
     widget.focusNode?.nextFocus(); // Move focus to the next field
   }
 
@@ -162,9 +161,12 @@ class _StaticSearchbarState extends State<StaticSearchbar> {
             decoration: InputDecoration(
               prefixIcon: Padding(
                 padding: EdgeInsets.only(left: 10.w, top: 7.h),
-                child: const FaIcon(FontAwesomeIcons.magnifyingGlass),
+                child: FaIcon(
+                  FontAwesomeIcons.magnifyingGlass,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
-              hintText: 'Search your city ...',
+              hintText: 'Search city ...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),

@@ -24,23 +24,26 @@ class ChatService {
     return _instance!;
   }
 
+  Map<String, ChatModel> latestMessages = {};
+
   // Method to send a message using ChatModel
-  Future<void> sendMessage({ required ChatModel chatModel, required String chatId}) async {
-    
-      try {
+  Future<void> sendMessage(
+      {required ChatModel chatModel, required String chatId}) async {
+    try {
       await _firestore
           .collection('chats')
           .doc(chatId)
           .collection('messages')
           .add(chatModel.toJson());
-      print('Message sent successfully');
     } catch (e) {
-      print('Error sending message: $e');
+      AppLogger.instance.e('Error sending message: $e');
     }
   }
 
   // Stream method to get messages for a specific chat ID
   Stream<List<ChatModel>> getMessages(String chatId) {
+    int idx = 0;
+
     return _firestore
         .collection('chats')
         .doc(chatId)
@@ -50,12 +53,17 @@ class ChatService {
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) {
               // Convert each document to ChatModel
-              return ChatModel.fromJson(doc.data() as Map<String, dynamic>);
+              final ChatModel chatmodel =
+                  ChatModel.fromJson(doc.data() as Map<String, dynamic>);
+
+              if (idx == 0) {
+                latestMessages[chatId] = chatmodel;
+              }
+              idx++;
+              return chatmodel;
             }).toList());
   }
 
-
-  
   Future<String> uploadImage(Uint8List imageData) async {
     // Create a request
     var request = http.MultipartRequest(
@@ -63,14 +71,13 @@ class ChatService {
 
     request.headers['Content-Type'] =
         'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW';
-    
-      request.files.add(
-        http.MultipartFile.fromBytes(
-            'file', // The field name expected by the serve
-            imageData,
-            filename: 'image.any'),
-      );
-    
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+          'file', // The field name expected by the serve
+          imageData,
+          filename: 'image.any'),
+    );
 
     // Send the request and await the response
     final response = await request.send();
@@ -81,14 +88,16 @@ class ChatService {
       throw Exception(ServiceUtils.parseErrorMessage(responseBody));
     }
 
-  return ServiceUtils.parseResponse(responseBody);
-    
-    
+    return ServiceUtils.parseResponse(responseBody);
   }
 
-  Future<Map<String, ChatModel>> getLatestMessages(List<ConversationModel> conversationModels) async {
-    Map<String, ChatModel> latestMessages = {};
-    
+  Future<Map<String, ChatModel>> getLatestMessages(
+      List<ConversationModel> conversationModels) async {
+
+        if(latestMessages.isNotEmpty){
+          return latestMessages;
+        }
+
     for (var conversation in conversationModels) {
       try {
         final querySnapshot = await _firestore
@@ -105,11 +114,11 @@ class ChatService {
           latestMessages[conversation.conversationId] = latestMessage;
         }
       } catch (e) {
-        AppLogger.instance.e("Error fetching latest message for conversation ${conversation.conversationId}: $e");
-        }
+        AppLogger.instance.e(
+            "Error fetching latest message for conversation ${conversation.conversationId}: $e");
+      }
     }
-    
+
     return latestMessages;
   }
-
 }

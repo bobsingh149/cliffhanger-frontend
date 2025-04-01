@@ -4,6 +4,7 @@ class AppLogger extends Logger {
  static AppLogger? _instance;
 
   AppLogger() : super(
+    level:  Level.error,
      filter: null,
       printer: PrettyPrinter(
         methodCount: 5, // Number of method calls to be displayed

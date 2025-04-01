@@ -1,4 +1,5 @@
 import 'package:barter_frontend/provider/auth_provider.dart';
+import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/screens/main_screen.dart';
 import 'package:barter_frontend/screens/user_onboarding.dart';
 import 'package:barter_frontend/theme/theme.dart';
@@ -53,7 +54,10 @@ class _SignInPageState extends State<SignInPage> {
   @override
   void initState() {
     super.initState();
-    _checkFirstTimeUser();
+
+    if (kIsWeb) {
+      _checkFirstTimeUser();
+    }
   }
 
   final String _preferencesKey = "welcome_dialog_shown";
@@ -96,7 +100,11 @@ class _SignInPageState extends State<SignInPage> {
       _logger.i(user!.email);
 
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(MainScreen.routePath);
+      // Clear user data after successful sign in
+      Provider.of<UserProvider>(context, listen: false).clearUserSetup();
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) =>
+              MainScreen(fromPage: NavigationPage.mainScreen)));
     } catch (e) {
       if (!mounted) return;
       CommonUtils.displaySnackbar(context: context, message: e.toString());
@@ -114,6 +122,8 @@ class _SignInPageState extends State<SignInPage> {
     User? user = await _authProvider.signUpWithEmail(email, password);
     _logger.i(user!.email);
     if (!mounted) return;
+    // Clear user data after successful sign up
+    Provider.of<UserProvider>(context, listen: false).clearUserSetup();
     Navigator.of(context).pushReplacementNamed(OnboardingPage.routePath);
   }
 
@@ -128,13 +138,18 @@ class _SignInPageState extends State<SignInPage> {
 
       _logger.i(user.email);
       if (!mounted) return;
+      // Clear user data after successful sign in/up
+      Provider.of<UserProvider>(context, listen: false).clearUserSetup();
 
       if (isNewUser) {
         _logger.i("New user signed up with Google");
-        Navigator.of(context).pushReplacementNamed(OnboardingPage.routePath);
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => OnboardingPage()));
       } else {
         _logger.i("Existing user signed in with Google");
-        Navigator.of(context).pushReplacementNamed(MainScreen.routePath);
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) =>
+                MainScreen(fromPage: NavigationPage.mainScreen)));
       }
     } catch (e) {
       if (!mounted) return;
@@ -152,7 +167,11 @@ class _SignInPageState extends State<SignInPage> {
 
       _logger.i("New guest user signed in");
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(MainScreen.routePath);
+      // Clear user data after successful guest sign in
+      Provider.of<UserProvider>(context, listen: false).clearUserSetup();
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) =>
+              MainScreen(fromPage: NavigationPage.mainScreen)));
     } catch (e) {
       if (!mounted) return;
       CommonUtils.displaySnackbar(context: context, message: e.toString());
@@ -176,12 +195,12 @@ class _SignInPageState extends State<SignInPage> {
   // Method to show the welcome dialog
   void _showWelcomeDialog() async {
     if (_isFirstTime && !_isDialogShown) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_preferencesKey, true);
-
       setState(() {
         _isDialogShown = true;
       });
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_preferencesKey, true);
 
       if (!mounted) return;
 
@@ -202,7 +221,7 @@ class _SignInPageState extends State<SignInPage> {
           child: Text(
             'Try Demo or \n sign in to your account',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.textColorDark,
                 ),
           ),
@@ -233,7 +252,8 @@ class _SignInPageState extends State<SignInPage> {
 
   // Method to navigate to the Demo (assuming MainScreen as Demo)
   void _navigateToDemo() {
-    Navigator.of(context).pushReplacementNamed(MainScreen.routePath);
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => MainScreen(fromPage: NavigationPage.mainScreen)));
   }
 
   @override
@@ -250,327 +270,291 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Container(
-          child: _authProvider.isLoading
-              ? CommonWidget.getLoader()
-              : Center(
-                  child: SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: kIsWeb ? 330.w : 5.w),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Cliffhanger',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displayLarge
-                                  ?.copyWith(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
-                                  ),
-                            ),
-                            if (kIsWeb) ...[
-                              SizedBox(width: 10.w),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context)
-                                      .pushNamed(LinksPage.routePath);
-                                },
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.primary,
-                                  backgroundColor: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withOpacity(0.1),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    side: BorderSide(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withOpacity(0.5),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  textStyle: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.5,
-                                      ),
-                                ),
-                                child: Text('Get App'),
-                              ),
-                            ],
-                          ],
-                        ),
-                        SizedBox(height: 35.h),
-                        Container(
-                          width: double.infinity,
+      body: _isDialogShown
+          ? const SizedBox.shrink()
+          : SafeArea(
+              child: Container(
+                child: _authProvider.isLoading
+                    ? CommonWidget.getLoader()
+                    : Center(
+                        child: SingleChildScrollView(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 15.w, vertical: 25.h),
-                          decoration:
-                              CommonDecoration.getContainerDecoration(context)
-                                  .copyWith(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .shadowColor
-                                    .withOpacity(0.2),
-                                spreadRadius: 1,
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                AnimatedSwitcher(
-                                  duration: _animationDuration,
-                                  switchInCurve: _animationCurve,
-                                  switchOutCurve: _animationCurve,
-                                  transitionBuilder: (Widget child,
-                                      Animation<double> animation) {
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: Offset(0, 0.1),
-                                          end: Offset.zero,
-                                        ).animate(animation),
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  child: Column(
-                                    key: ValueKey<bool>(isSignInView),
-                                    children: [
-                                      TextFormField(
-                                        controller: _emailController,
-                                        focusNode: _emailFocusNode,
-                                        decoration: InputDecoration(
-                                          labelText: 'Email',
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                              horizontal: kIsWeb ? 330.w : 3.w),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Cliffhanger',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayLarge
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                  ),
+                                  if (kIsWeb) ...[
+                                    SizedBox(width: 10.w),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pushNamed(LinksPage.routePath);
+                                      },
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 8),
+                                        foregroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withOpacity(0.1),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          side: BorderSide(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withOpacity(0.5),
+                                            width: 1,
                                           ),
-                                          prefixIcon: Icon(Icons.email),
                                         ),
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.isEmpty ||
-                                              !RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                                  .hasMatch(value)) {
-                                            return 'Please enter a valid email';
-                                          }
-                                          return null;
-                                        },
-                                        onFieldSubmitted: (_) {
-                                          FocusScope.of(context)
-                                              .requestFocus(_passwordFocusNode);
-                                        },
-                                      ),
-                                      SizedBox(height: 18.h),
-                                      TextFormField(
-                                        controller: _passwordController,
-                                        focusNode: _passwordFocusNode,
-                                        decoration: InputDecoration(
-                                          labelText: 'Password',
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          prefixIcon: Icon(Icons.lock),
-                                        ),
-                                        obscureText: true,
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.isEmpty ||
-                                              value.length < 6) {
-                                            return 'Password must be at least 6 characters';
-                                          }
-                                          return null;
-                                        },
-                                        onFieldSubmitted: (_) {
-                                          isSignInView
-                                              ? _signInWithEmail()
-                                              : _signUpWithEmail();
-                                        },
-                                      ),
-                                      SizedBox(height: 18.h),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          minimumSize: Size(double.infinity,
-                                              kIsWeb ? 45.h : 36.h),
-                                        ),
-                                        onPressed: isSignInView
-                                            ? _signInWithEmail
-                                            : _signUpWithEmail,
-                                        child: Text(
-                                          isSignInView ? 'Sign In' : 'Sign Up',
-                                        ),
-                                      ),
-                                      SizedBox(height: 18.h),
-                                      Row(
-                                        children: [
-                                          const Expanded(
-                                              child: Divider(thickness: 1)),
-                                          Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 10.0.w),
-                                            child: Text(
-                                              'OR',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                    letterSpacing: 1.5,
-                                                  ),
+                                        textStyle: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 0.5,
                                             ),
-                                          ),
-                                          const Expanded(
-                                              child: Divider(thickness: 1)),
-                                        ],
                                       ),
-                                      SizedBox(height: 12.h),
-                                      SignInButton(
-                                        btnTextColor: Colors.white,
-                                        btnColor: AppTheme.tertiaryColor,
-                                        buttonType: ButtonType.google,
-                                        onPressed: _signInWithGoogle,
-                                        btnText: isSignInView
-                                            ? 'Sign in with Google'
-                                            : 'Sign up with Google',
+                                      child: Text('Get App'),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              SizedBox(height: 35.h),
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 15.w, vertical: 25.h),
+                                decoration:
+                                    CommonDecoration.getContainerDecoration(
+                                            context)
+                                        .copyWith(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context)
+                                          .shadowColor
+                                          .withOpacity(0.2),
+                                      spreadRadius: 1,
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    children: [
+                                      AnimatedSwitcher(
+                                        duration: _animationDuration,
+                                        switchInCurve: _animationCurve,
+                                        switchOutCurve: _animationCurve,
+                                        transitionBuilder: (Widget child,
+                                            Animation<double> animation) {
+                                          return FadeTransition(
+                                            opacity: animation,
+                                            child: SlideTransition(
+                                              position: Tween<Offset>(
+                                                begin: Offset(0, 0.1),
+                                                end: Offset.zero,
+                                              ).animate(animation),
+                                              child: child,
+                                            ),
+                                          );
+                                        },
+                                        child: Column(
+                                          key: ValueKey<bool>(isSignInView),
+                                          children: [
+                                            TextFormField(
+                                              controller: _emailController,
+                                              focusNode: _emailFocusNode,
+                                              decoration: InputDecoration(
+                                                labelText: 'Email',
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                prefixIcon: Icon(Icons.email),
+                                              ),
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty ||
+                                                    !RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                                        .hasMatch(value)) {
+                                                  return 'Please enter a valid email';
+                                                }
+                                                return null;
+                                              },
+                                              onFieldSubmitted: (_) {
+                                                FocusScope.of(context)
+                                                    .requestFocus(
+                                                        _passwordFocusNode);
+                                              },
+                                            ),
+                                            SizedBox(height: 18.h),
+                                            TextFormField(
+                                              controller: _passwordController,
+                                              focusNode: _passwordFocusNode,
+                                              decoration: InputDecoration(
+                                                labelText: 'Password',
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                prefixIcon: Icon(Icons.lock),
+                                              ),
+                                              obscureText: true,
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty ||
+                                                    value.length < 6) {
+                                                  return 'Password must be at least 6 characters';
+                                                }
+                                                return null;
+                                              },
+                                              onFieldSubmitted: (_) {
+                                                isSignInView
+                                                    ? _signInWithEmail()
+                                                    : _signUpWithEmail();
+                                              },
+                                            ),
+                                            SizedBox(height: 18.h),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                minimumSize: Size(
+                                                    double.infinity,
+                                                    kIsWeb ? 45.h : 36.h),
+                                              ),
+                                              onPressed: isSignInView
+                                                  ? _signInWithEmail
+                                                  : _signUpWithEmail,
+                                              child: Text(
+                                                isSignInView
+                                                    ? 'Sign In'
+                                                    : 'Sign Up',
+                                              ),
+                                            ),
+                                            SizedBox(height: 18.h),
+                                            Row(
+                                              children: [
+                                                const Expanded(
+                                                    child:
+                                                        Divider(thickness: 1)),
+                                                Padding(
+                                                  padding: EdgeInsets.symmetric(
+                                                      horizontal: 10.0.w),
+                                                  child: Text(
+                                                    'OR',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          letterSpacing: 1.5,
+                                                        ),
+                                                  ),
+                                                ),
+                                                const Expanded(
+                                                    child:
+                                                        Divider(thickness: 1)),
+                                              ],
+                                            ),
+                                            SizedBox(height: 12.h),
+                                            SignInButton(
+                                              btnTextColor: Colors.white,
+                                              btnColor: AppTheme.tertiaryColor,
+                                              buttonType: ButtonType.google,
+                                              onPressed: _signInWithGoogle,
+                                              btnText: isSignInView
+                                                  ? 'Sign in with Google'
+                                                  : 'Sign up with Google',
+                                            ),
+                                            SizedBox(height: 12.h),
+                                          ],
+                                        ),
                                       ),
-                                      SizedBox(height: 12.h),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 20.h),
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 15.h),
-                          decoration:
-                              CommonDecoration.getContainerDecoration(context)
-                                  .copyWith(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .shadowColor
-                                    .withOpacity(0.2),
-                                spreadRadius: 1,
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+                              ),
+                              SizedBox(height: 20.h),
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w, vertical: 15.h),
+                                decoration:
+                                    CommonDecoration.getContainerDecoration(
+                                            context)
+                                        .copyWith(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context)
+                                          .shadowColor
+                                          .withOpacity(0.2),
+                                      spreadRadius: 1,
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      isSignInView
+                                          ? "Don't have an account?"
+                                          : "Already have an account?",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                            letterSpacing: 0.5,
+                                          ),
+                                    ),
+                                    SizedBox(width: 3.w),
+                                    TextButton(
+                                      onPressed: _toggleView,
+                                      child: Text(
+                                        isSignInView ? 'Sign up' : 'Sign in',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              color: AppTheme.primaryColor,
+                                              letterSpacing: 0.5,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                kIsWeb
-                                    ? SizedBox(
-                                        width: 100.w,
-                                      )
-                                    : SizedBox(
-                                        width: 5.w,
-                                      ),
-                                TextButton(
-                                  onPressed: _signInWithGuest,
-                                  style: TextButton.styleFrom(
-                                    padding: kIsWeb
-                                        ? EdgeInsets.symmetric(
-                                            horizontal: 15, vertical: 15.h)
-                                        : null,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      side: BorderSide(
-                                        color: AppTheme.primaryColor,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    foregroundColor: AppTheme.primaryColor,
-                                    textStyle: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.5,
-                                        ),
-                                  ),
-                                  child: Text('Use Demo Account'),
-                                ),
-                                SizedBox(width: 16.w),
-                                SizedBox(
-                                  height: 30.h, // Adjust this value as needed
-                                  child: VerticalDivider(
-                                    thickness: 1.5,
-                                    width: 1,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                ),
-                                SizedBox(width: 16.w),
-                                TextButton(
-                                  onPressed: _toggleView,
-                                  style: TextButton.styleFrom(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 30,
-                                        vertical: kIsWeb ? 15.h : 8.h),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    foregroundColor:
-                                        Theme.of(context).colorScheme.onPrimary,
-                                    backgroundColor: Theme.of(context)
-                                                .brightness ==
-                                            Brightness.light
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.7),
-                                    textStyle: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5,
-                                          color: Colors.white,
-                                        ),
-                                  ),
-                                  child: Text(
-                                      isSignInView ? 'Sign up' : 'Sign in'),
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-        ),
-      ),
+                      ),
+              ),
+            ),
     );
   }
 }

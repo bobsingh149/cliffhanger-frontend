@@ -90,7 +90,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         }
       }
     } catch (e) {
-      print('Error picking image: $e');
+      if (mounted) {
+        CommonUtils.displaySnackbar(
+          context: context,
+          message: 'Error picking image: $e',
+          mode: SnackbarMode.error,
+        );
+      }
     }
   }
 
@@ -224,7 +230,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             padding: EdgeInsets.only(right: 16.w),
             child: FloatingActionButton.small(
               onPressed: _createGroup,
-              child:  Icon(Icons.check),
+              child: Icon(Icons.check),
               backgroundColor: AppTheme.primaryColor.withOpacity(
                 Theme.of(context).brightness == Brightness.light ? 1.0 : 0.7,
               ),
@@ -238,7 +244,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             : SingleChildScrollView(
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: kIsWeb ? 0.25.sw : 16.w,
+                    horizontal: kIsWeb ? 0.25.sw : 3.w,
                     vertical: kIsWeb ? 30.h : 16.h,
                   ),
                   child: FadeInUp(
@@ -260,7 +266,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Widget _buildContent() {
     return Container(
       constraints: BoxConstraints(maxWidth: kIsWeb ? 600 : double.infinity),
-      padding: EdgeInsets.all(kIsWeb ? 32.r : 16.r),
+      padding: const EdgeInsets.all(kIsWeb ? 32 : 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

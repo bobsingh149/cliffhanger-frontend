@@ -41,8 +41,8 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDmTprTUQ4Vc9jKsW_aolgrwrzRi1mv6rI',
-    appId: '1:450436408734:web:1f70ea6918539a67b7628f',
+    apiKey: 'AIzaSyDYsSmJjio9WpWL0Zy6mggpJkryZlpz44c',
+    appId: '1:450436408734:web:af0fb94ca3271d2bb7628f',
     messagingSenderId: '450436408734',
     projectId: 'novelnest-827a6',
     authDomain: 'novelnest-827a6.firebaseapp.com',
@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyC6bZN8lbHaS41jpCs8IVLbVymgq6-UbTA',
-    appId: '1:450436408734:android:c93b8bcac9a4bc1bb7628f',
+    appId: '1:450436408734:android:7f8539764afef50db7628f',
     messagingSenderId: '450436408734',
     projectId: 'novelnest-827a6',
     storageBucket: 'novelnest-827a6.appspot.com',
@@ -59,28 +59,33 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBiwhE0l5gQRoYlfkD3pEluOFpmKBH4uL8',
-    appId: '1:450436408734:ios:c52cde9188f217dab7628f',
+    appId: '1:450436408734:ios:6b6d7651ffb16e92b7628f',
     messagingSenderId: '450436408734',
     projectId: 'novelnest-827a6',
     storageBucket: 'novelnest-827a6.appspot.com',
-    iosBundleId: 'com.example.barterFrontend',
+    androidClientId: '450436408734-c9vdjvqlpn2smntjqskccbuchn2gavv6.apps.googleusercontent.com',
+    iosClientId: '450436408734-dd05262nsuvet0h30k4jpa1jfk0uill8.apps.googleusercontent.com',
+    iosBundleId: 'com.cliffhanger.barter',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBiwhE0l5gQRoYlfkD3pEluOFpmKBH4uL8',
-    appId: '1:450436408734:ios:c52cde9188f217dab7628f',
+    appId: '1:450436408734:ios:6b6d7651ffb16e92b7628f',
     messagingSenderId: '450436408734',
     projectId: 'novelnest-827a6',
     storageBucket: 'novelnest-827a6.appspot.com',
-    iosBundleId: 'com.example.barterFrontend',
+    androidClientId: '450436408734-c9vdjvqlpn2smntjqskccbuchn2gavv6.apps.googleusercontent.com',
+    iosClientId: '450436408734-dd05262nsuvet0h30k4jpa1jfk0uill8.apps.googleusercontent.com',
+    iosBundleId: 'com.cliffhanger.barter',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDmTprTUQ4Vc9jKsW_aolgrwrzRi1mv6rI',
-    appId: '1:450436408734:web:0bdf91904c9ec007b7628f',
+    apiKey: 'AIzaSyDYsSmJjio9WpWL0Zy6mggpJkryZlpz44c',
+    appId: '1:450436408734:web:e93d5635985068b9b7628f',
     messagingSenderId: '450436408734',
     projectId: 'novelnest-827a6',
     authDomain: 'novelnest-827a6.firebaseapp.com',
     storageBucket: 'novelnest-827a6.appspot.com',
   );
+
 }

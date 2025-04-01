@@ -3,13 +3,10 @@ import 'package:animate_do/animate_do.dart';
 import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/provider/auth_provider.dart';
 import 'package:barter_frontend/provider/user_provider.dart';
-import 'package:barter_frontend/screens/home_page.dart';
 import 'package:barter_frontend/screens/main_screen.dart';
 import 'package:barter_frontend/services/auth_services.dart';
-import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:barter_frontend/widgets/static_search_bar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_picker_web/image_picker_web.dart'
     if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
 import 'package:provider/provider.dart';
+import 'package:barter_frontend/utils/common_utils.dart';
 
 class OnboardingPage extends StatefulWidget {
   static const String routePath = "/onboarding";
@@ -92,7 +90,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
         }
       }
     } catch (e) {
-      print('Error picking image: $e');
+      CommonUtils.displaySnackbar(
+        context: context,
+        message: 'Unable to upload image. Please try again.',
+        mode: SnackbarMode.error,
+      );
     }
   }
 
@@ -125,7 +127,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
       );
 
       if (mounted) {
-        Navigator.of(context).popAndPushNamed(MainScreen.routePath);
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) =>
+                MainScreen(fromPage: NavigationPage.mainScreen)));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -180,7 +184,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 alignment: Alignment.center,
                 children: [
                   CircleAvatar(
-                    radius: kIsWeb ? 60 : 50,
+                    radius: kIsWeb ? 60 : 60,
                     backgroundColor: Colors.grey[200],
                     backgroundImage:
                         _imageData != null ? MemoryImage(_imageData!) : null,
@@ -302,9 +306,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
           SizedBox(height: 16.h),
           FadeInRight(
             duration: Duration(milliseconds: 700),
+            child: StaticSearchbar(
+              focusNode: _focusNodes[3],
+              onItemSelected: (selectedCity) {
+                _selectedCity = selectedCity;
+                _fieldFocusChange(context, 3);
+              },
+            ),
+          ),
+          SizedBox(height: 16.h),
+          FadeInRight(
+            duration: Duration(milliseconds: 700),
             child: DropdownButtonFormField<String>(
               focusNode: _focusNodes[1],
-              menuMaxHeight: 0.3.sh,
+              menuMaxHeight: kIsWeb ? 300.h : 250.h,
+              isExpanded: true,
               decoration: _buildInputDecoration('Age'),
               value: _age,
               items: List.generate(86, (index) {
@@ -322,18 +338,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ),
           ),
           SizedBox(height: 16.h),
-           FadeInRight(
-            duration: Duration(milliseconds: 700),
-            child: StaticSearchbar(
-              focusNode: _focusNodes[3],
-              onItemSelected: (selectedCity) {
-                _selectedCity = selectedCity;
-                _fieldFocusChange(context, 3);
-              },
-            ),
-          ),
-                    SizedBox(height: 16.h),
-    
           FadeInLeft(
             duration: Duration(milliseconds: 700),
             child: TextFormField(
@@ -344,7 +348,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
               onFieldSubmitted: (_) => _fieldFocusChange(context, 2),
             ),
           ),
-         
           SizedBox(height: 35.h),
           FadeInUp(
             duration: Duration(milliseconds: 700),
@@ -374,7 +377,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(
                     horizontal: kIsWeb ? 0.27.sw : 0.w,
-                    vertical: kIsWeb ? 30.h : 5.h,
+                    vertical: kIsWeb ? 30.h : 3.h,
                   ),
                   child: kIsWeb
                       ? Center(

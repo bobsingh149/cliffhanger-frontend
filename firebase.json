@@ -4,7 +4,7 @@
       "android": {
         "default": {
           "projectId": "novelnest-827a6",
-          "appId": "1:450436408734:android:c93b8bcac9a4bc1bb7628f",
+          "appId": "1:450436408734:android:7f8539764afef50db7628f",
           "fileOutput": "android/app/google-services.json"
         }
       },
@@ -12,11 +12,11 @@
         "lib/firebase_options.dart": {
           "projectId": "novelnest-827a6",
           "configurations": {
-            "android": "1:450436408734:android:c93b8bcac9a4bc1bb7628f",
-            "ios": "1:450436408734:ios:c52cde9188f217dab7628f",
-            "macos": "1:450436408734:ios:c52cde9188f217dab7628f",
-            "web": "1:450436408734:web:1f70ea6918539a67b7628f",
-            "windows": "1:450436408734:web:0bdf91904c9ec007b7628f"
+            "android": "1:450436408734:android:7f8539764afef50db7628f",
+            "ios": "1:450436408734:ios:6b6d7651ffb16e92b7628f",
+            "macos": "1:450436408734:ios:6b6d7651ffb16e92b7628f",
+            "web": "1:450436408734:web:af0fb94ca3271d2bb7628f",
+            "windows": "1:450436408734:web:e93d5635985068b9b7628f"
           }
         }
       }
@@ -28,6 +28,12 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   }
 }

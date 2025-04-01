@@ -1,3 +1,4 @@
+import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/models/user_setup.dart';
 import 'package:barter_frontend/screens/connection_requests_page.dart';
@@ -6,6 +7,7 @@ import 'package:barter_frontend/screens/post_book.dart';
 import 'package:barter_frontend/screens/profile.dart';
 import 'package:barter_frontend/screens/book_buddies_screen.dart';
 import 'package:barter_frontend/services/auth_services.dart';
+import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -18,37 +20,131 @@ import 'package:barter_frontend/provider/user_provider.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:barter_frontend/screens/link_screen.dart';
 
+enum NavigationPage {
+  home,
+  postBook,
+  contacts,
+  bookBuddies,
+  connectionRequests,
+  getApp,
+  profile,
+  mainScreen,
+  chat
+}
+
 class MainScreen extends StatefulWidget {
   static const routePath = 'home';
-  MainScreen({Key? key}) : super(key: key);
+  final NavigationPage initialPage;
+  NavigationPage fromPage;
+  String? userId;
+  final ContactModel? contact;
+
+  MainScreen({
+    Key? key,
+    this.initialPage = NavigationPage.home,
+    required this.fromPage,
+    this.userId,
+    this.contact,
+  }) : super(key: key);
 
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
-  final List<bool> _loadedPages = List.generate(7, (index) => index == 0);
+  late int _selectedIndex;
+  late NavigationPage fromPage;
+  final List<bool> _loadedPages = List.generate(7, (index) => false);
+  String userId = AuthService.getInstance.currentUser!.uid;
+
+  int _getWebIndex(NavigationPage page) {
+    switch (page) {
+      case NavigationPage.home:
+        return 0;
+      case NavigationPage.postBook:
+        return 1;
+      case NavigationPage.contacts:
+        return 2;
+      case NavigationPage.bookBuddies:
+        return 3;
+      case NavigationPage.connectionRequests:
+        return 4;
+      case NavigationPage.getApp:
+        return 5;
+      case NavigationPage.profile:
+        return 6;
+      case NavigationPage.chat:
+      case NavigationPage.mainScreen:
+        return 0;
+    }
+  }
+
+  int _getMobileIndex(NavigationPage page) {
+    switch (page) {
+      case NavigationPage.home:
+        return 0;
+      case NavigationPage.postBook:
+        return 1;
+      case NavigationPage.contacts:
+        return 2;
+      case NavigationPage.bookBuddies:
+        return 3;
+      case NavigationPage.profile:
+        return 4;
+      case NavigationPage.connectionRequests:
+      case NavigationPage.getApp:
+      case NavigationPage.mainScreen:
+      case NavigationPage.chat:
+        return 0; // Default to home
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fromPage = widget.fromPage;
+    _selectedIndex = kIsWeb
+        ? _getWebIndex(widget.initialPage)
+        : _getMobileIndex(widget.initialPage);
+    _loadedPages[_selectedIndex] = true;
+    userId = widget.userId ?? AuthService.getInstance.currentUser!.uid;
+  }
 
   // Modify the web widget options to include LinksPage
   List<Widget> get _webWidgetOptions => [
-    _loadedPages[0] ?  KeepAlivePage(child: HomePage()) : Container(),
-    _loadedPages[1] ?  const KeepAlivePage(child: PostBookPage()) : Container(),
-    _loadedPages[2] ?  ContactsScreen() : Container(),
-    _loadedPages[3] ?  BookBuddiesScreen() : Container(),
-    _loadedPages[4] ?  ConnectionRequestsPage() : Container(),
-    _loadedPages[5] ? ProfilePage(userId: AuthService.getInstance.currentUser!.uid) : Container(),
-    _loadedPages[6] ? const LinksPage() : Container(),
-  ];
+        _loadedPages[0] ? KeepAlivePage(child: HomePage()) : Container(),
+        _loadedPages[1]
+            ? const KeepAlivePage(child: PostBookPage())
+            : Container(),
+        _loadedPages[2] ? ContactsScreen() : Container(),
+        _loadedPages[3] ? BookBuddiesScreen() : Container(),
+        _loadedPages[4] ? ConnectionRequestsPage() : Container(),
+        _loadedPages[5] ? const LinksPage() : Container(),
+        _loadedPages[6]
+            ? ProfilePage(
+                userId: userId,
+                fromPage: fromPage,
+                contact: widget.contact,
+              )
+            : Container(),
+      ];
 
   // Update _mobileWidgetOptions to be a getter with lazy loading
   List<Widget> get _mobileWidgetOptions => [
-    _loadedPages[0] ?  KeepAlivePage(child: HomePage()) : Container(),
-    _loadedPages[1] ?  const KeepAlivePage(child: PostBookPage()) : Container(),
-    _loadedPages[2] ?  ContactsScreen() : Container(),
-    _loadedPages[3] ?  BookBuddiesScreen() : Container(),
-    _loadedPages[4] ? ProfilePage(userId: AuthService.getInstance.currentUser!.uid) : Container(),
-  ];
+        _loadedPages[0] ? KeepAlivePage(child: HomePage()) : Container(),
+        _loadedPages[1]
+            ? const KeepAlivePage(child: PostBookPage())
+            : Container(),
+        _loadedPages[2] ? ContactsScreen() : Container(),
+        _loadedPages[3] ? BookBuddiesScreen() : Container(),
+        _loadedPages[4]
+            ? ProfilePage(
+                userId: userId,
+                fromPage:fromPage,
+                contact: widget.contact,
+              )
+            : Container(),
+      ];
 
   // Update web navigation items to include Get App
   final List<NavigationItem> _webNavigationItems = [
@@ -70,7 +166,7 @@ class _MainScreenState extends State<MainScreen> {
     ),
     NavigationItem(
       icon: FontAwesomeIcons.userPlus,
-      label: 'Connection Requests',
+      label: 'Requests',
     ),
     NavigationItem(
       icon: FontAwesomeIcons.download,
@@ -78,35 +174,35 @@ class _MainScreenState extends State<MainScreen> {
     ),
   ];
 
-  // Mobile navigation items (reordered for mobile UX)
-  final List<NavigationItem> _mobileNavigationItems = [
-    NavigationItem(
-      icon: FontAwesomeIcons.house,
-      label: 'Home',
-    ),
-    NavigationItem(
-      icon: Icons.add_box_sharp,
-      label: 'Post Book',
-    ),
-    NavigationItem(
-      icon: FontAwesomeIcons.comments,
-      label: 'Messages',
-    ),
-    NavigationItem(
-      icon: FontAwesomeIcons.userGroup,
-      label: 'Book Buddies',
-    ),
-    NavigationItem(
-      icon: Icons.person,
-      label: 'Profile',
-      isProfile: true,
-      profileImageUrl:
-          'https://res.cloudinary.com/dllr1e6gn/image/upload/v1/profile_images/aemio6hooqxp1eiqzpev',
-    ),
-  ];
+  // Update _mobileNavigationItems to be a getter that excludes the profile image URL
+  List<NavigationItem> get _mobileNavigationItems => [
+        NavigationItem(
+          icon: FontAwesomeIcons.house,
+          label: 'Home',
+        ),
+        NavigationItem(
+          icon: Icons.add_box_sharp,
+          label: 'Post Book',
+        ),
+        NavigationItem(
+          icon: FontAwesomeIcons.comments,
+          label: 'Messages',
+        ),
+        NavigationItem(
+          icon: FontAwesomeIcons.userGroup,
+          label: 'Book Buddies',
+        ),
+        NavigationItem(
+          icon: Icons.person,
+          label: 'Profile',
+          isProfile: true,
+        ),
+      ];
 
   void _onItemTapped(int index) {
     setState(() {
+      fromPage = NavigationPage.mainScreen;
+      userId = AuthService.getInstance.currentUser!.uid;
       _selectedIndex = index;
       _loadedPages[index] = true;
     });
@@ -115,7 +211,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final userProvider = Provider.of<UserProvider>(context,listen: true);
+    final userProvider = Provider.of<UserProvider>(context, listen: true);
 
     if (kIsWeb) {
       return Scaffold(
@@ -153,33 +249,48 @@ class _MainScreenState extends State<MainScreen> {
           children: _mobileWidgetOptions,
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: _mobileNavigationItems
-            .map((item) => BottomNavigationBarItem(
-                  icon: item.isProfile
-                      ? CircleAvatar(
-                          radius: 12,
-                          child: ClipOval(
-                            child: CachedNetworkImage(
-                              imageUrl: item.profileImageUrl!,
-                              placeholder: (context, url) =>
-                                  const CircularProgressIndicator(),
-                              errorWidget: (context, url, error) =>
-                                  Icon(item.icon, size: 17),
-                              fit: BoxFit.cover,
-                              width: 24,
-                              height: 24,
-                            ),
-                          ),
-                        )
-                      : FaIcon(item.icon, size: 20),
-                  label: '',
-                ))
-            .toList(),
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
+      bottomNavigationBar: Consumer<UserProvider>(
+        builder: (context, userProvider, _) {
+          return FutureBuilder<UserSetupModel>(
+            future: userProvider
+                .getUserSetup(AuthService.getInstance.currentUser!.uid),
+            builder: (context, snapshot) {
+              return BottomNavigationBar(
+                items: _mobileNavigationItems
+                    .map((item) => BottomNavigationBarItem(
+                          icon: item.isProfile
+                              ? CircleAvatar(
+                                  radius: 12,
+                                  child: ClipOval(
+                                    child: snapshot.hasData
+                                        ? CachedNetworkImage(
+                                            imageUrl:
+                                                snapshot.data?.profileImage ??
+                                                    '',
+                                            placeholder: (context, url) =>
+                                                const CircularProgressIndicator(),
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    Icon(item.icon, size: 17),
+                                            fit: BoxFit.cover,
+                                            width: 24,
+                                            height: 24,
+                                          )
+                                        : Icon(item.icon, size: 17),
+                                  ),
+                                )
+                              : FaIcon(item.icon, size: 20),
+                          label: '',
+                        ))
+                    .toList(),
+                currentIndex: _selectedIndex,
+                onTap: _onItemTapped,
+                showSelectedLabels: false,
+                showUnselectedLabels: false,
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -239,7 +350,8 @@ class WebSidebar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: FutureBuilder<UserSetupModel>(
-              future: userProvider.getUserSetup(AuthService.getInstance.currentUser!.uid),
+              future: userProvider
+                  .getUserSetup(AuthService.getInstance.currentUser!.uid),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Column(
@@ -275,7 +387,7 @@ class WebSidebar extends StatelessWidget {
                         ),
                       ),
                       child: InkWell(
-                        onTap: () => onItemSelected(5),
+                        onTap: () => onItemSelected(6),
                         child: CircleAvatar(
                           radius: 45,
                           backgroundColor:

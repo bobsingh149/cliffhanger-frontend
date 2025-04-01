@@ -2,6 +2,8 @@ import 'package:barter_frontend/models/chat.dart';
 import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/models/user.dart';
 import 'package:barter_frontend/provider/chat_provider.dart';
+import 'package:barter_frontend/screens/contacts_screen.dart';
+import 'package:barter_frontend/screens/main_screen.dart';
 import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
@@ -13,7 +15,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:image_picker_web/image_picker_web.dart'
-if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
+    if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
 
 class ChatScreen extends StatefulWidget {
   static const routePath = '/chat';
@@ -33,6 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   Uint8List? _imageData;
+  bool _isSendingImage = false;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +49,39 @@ class _ChatScreenState extends State<ChatScreen> {
           child: Column(
             children: [
               AppBar(
-                title: Text(widget.contact.getDisplayName()),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MainScreen(
+                          initialPage: NavigationPage.contacts,
+                          fromPage: NavigationPage.chat,
+                          contact: widget.contact,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                title: InkWell(
+                  onTap: () {
+                    if (!widget.contact.isGroup) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MainScreen(
+                            initialPage: NavigationPage.profile,
+                            fromPage: NavigationPage.chat,
+                            userId: widget.contact.userResponse!.id,
+                            contact: widget.contact,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(widget.contact.getDisplayName()),
+                ),
                 centerTitle: true,
               ),
               Expanded(
@@ -84,7 +119,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                       groupedMessages[dateKey]!;
 
                                   // Sort messages within the date group (oldest to newest)
-                                  dayMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+                                  dayMessages.sort((a, b) =>
+                                      a.timestamp.compareTo(b.timestamp));
 
                                   return Column(
                                     children: [
@@ -108,7 +144,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildChatBubble(ChatModel chatMessage) {
     // Determine if the message is sent by the current user
-    final bool isMe = chatMessage.from == AuthService.getInstance.currentUser!.uid;
+    final bool isMe =
+        chatMessage.from == AuthService.getInstance.currentUser!.uid;
 
     final DateTime timestamp = chatMessage.timestamp;
     Widget? senderInfo;
@@ -164,8 +201,8 @@ class _ChatScreenState extends State<ChatScreen> {
           color: isMe
               ? AppTheme.secondaryColor
               : Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[900]
-                  : Colors.white,
+                  ? Colors.grey[850]
+                  : Colors.grey[100],
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
             topRight: const Radius.circular(20),
@@ -273,9 +310,18 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           SizedBox(width: 1.w),
           IconButton(
-            onPressed: _sendMessage,
+            onPressed: _isSendingImage ? null : _sendMessage,
             icon: CircleAvatar(
-              child: Icon(Icons.send, color: Colors.white),
+              child: _isSendingImage
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Icon(Icons.send, color: Colors.white),
             ),
           ),
         ],
@@ -297,6 +343,9 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _messageController.clear();
     });
+
+    // Close the keyboard
+    FocusScope.of(context).unfocus();
   }
 
   String _getTime() {
@@ -326,19 +375,38 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     } catch (e) {
-      print('Error picking image: $e');
+      if (mounted) {
+        CommonUtils.displaySnackbar(
+          context: context,
+          message: 'Error picking image: $e',
+          mode: SnackbarMode.error,
+        );
+      }
     }
   }
 
   Future<void> _sendImageMessage(Uint8List imageData) async {
-    await _provider!.sendImageMessage(
-        chatModel: ChatModel(
-            from: AuthService.getInstance.currentUser!.uid,
-            message: _messageController.text.trim(),
-            isImage: true,
-            timestamp: DateTime.now()),
-        chatId: widget.contact.conversationId,
-        imageData: imageData);
+    setState(() {
+      _isSendingImage = true;
+    });
+
+    try {
+      await _provider!.sendImageMessage(
+          chatModel: ChatModel(
+              from: AuthService.getInstance.currentUser!.uid,
+              message: _messageController.text.trim(),
+              isImage: true,
+              timestamp: DateTime.now()),
+          chatId: widget.contact.conversationId,
+          imageData: imageData);
+    } finally {
+      setState(() {
+        _isSendingImage = false;
+      });
+    }
+
+    // Close the keyboard
+    FocusScope.of(context).unfocus();
   }
 
   Widget _buildDateHeader(String date) {

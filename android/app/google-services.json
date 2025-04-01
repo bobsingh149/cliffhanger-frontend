@@ -7,20 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:450436408734:android:c93b8bcac9a4bc1bb7628f",
+        "mobilesdk_app_id": "1:450436408734:android:7f8539764afef50db7628f",
         "android_client_info": {
-          "package_name": "com.example.barter_frontend"
+          "package_name": "com.cliffhanger.barter"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "450436408734-c9vdjvqlpn2smntjqskccbuchn2gavv6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.barter_frontend",
-            "certificate_hash": "56607526efdbb344e2648b9683694f551968288f"
-          }
-        },
         {
           "client_id": "450436408734-boc9lt5sbnckilhrat3qamodm119vskq.apps.googleusercontent.com",
           "client_type": 3
@@ -39,10 +31,10 @@
               "client_type": 3
             },
             {
-              "client_id": "450436408734-v8l5v9954ookiibite4n7n6il8tlv9d9.apps.googleusercontent.com",
+              "client_id": "450436408734-dd05262nsuvet0h30k4jpa1jfk0uill8.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.barterFrontend"
+                "bundle_id": "com.cliffhanger.barter"
               }
             }
           ]

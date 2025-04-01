@@ -85,7 +85,7 @@ class _UserPostState extends State<UserPost> {
                               widget.userBook.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
+                              style: theme.textTheme.bodyLarge?.copyWith(
                                 color: theme.colorScheme.primary,
                               ),
                             ),

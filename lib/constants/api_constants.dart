@@ -1,5 +1,5 @@
 class ApiRoutePaths {
-  static const String baseUrl = "https://barter-backend-w0ef.onrender.com/api";
+  static const String baseUrl = "https://api.cliffhanger.in/api";
   // static const String baseUrl = "http://localhost:7000/api";
   static const String userUrl = "$baseUrl/user";
   static const String bookUrl = "$baseUrl/product";
@@ -10,7 +10,7 @@ class ApiRoutePaths {
   static const String getPostsBySearch = "$bookUrl/getPostsBySearch";
   static const String getBookBuddies = "$userUrl/getBookBuddies";
   static const String getRequests = "$userUrl/getRequests";
-    static const String getConnections = "$userUrl/getConnectionsByIds";
+  static const String getConnections = "$userUrl/getConnectionsByIds";
   static const String getBookBuddy = "$userUrl/getBookBuddy";
   static const String updateUser = "$userUrl/updateUser";
   static const String saveConnection = "$userUrl/saveConnection";

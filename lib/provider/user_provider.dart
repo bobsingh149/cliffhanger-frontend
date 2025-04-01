@@ -10,7 +10,6 @@ import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/services/chat_serivces.dart';
 import 'package:barter_frontend/services/user_services.dart';
 import 'package:barter_frontend/utils/app_logger.dart';
-import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_picker_web/image_picker_web.dart'
     if (dart.library.io) 'package:barter_frontend/utils/mock_image_picker_web.dart';
@@ -31,10 +30,21 @@ class UserProvider with ChangeNotifier {
 
   List<ContactModel>? get contacts => _contacts;
 
+  UserModel? currentUser;
+
   // Method to fetch user data from the API
   Future<UserModel?> fetchUser(String userId) async {
+    if(userId == AuthService.getInstance.currentUser!.uid && currentUser != null){
+      return currentUser;
+    }
+
     try {
-      return await _userService.fetchUser(userId);
+      final res =  await _userService.fetchUser(userId);
+
+      if(userId == AuthService.getInstance.currentUser!.uid){
+        currentUser = res;
+      }
+      return res;
     } catch (e) {
       _logger.e('Error fetching user: $e');
       rethrow;
@@ -52,11 +62,12 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<GetBookBuddy> getBookBuddy() async {
+  Future<GetBookBuddy?> getBookBuddy() async {
     try {
-      clearUserSetup();
-      return await _userService
+      final bookBuddy = await _userService
           .getBookBuddy(AuthService.getInstance.currentUser!.uid);
+      clearUserSetup();
+      return bookBuddy;
     } catch (e) {
       _logger.e('Error fetching book buddy: $e');
       rethrow;
@@ -88,8 +99,10 @@ class UserProvider with ChangeNotifier {
   void clearUserSetup() {
     _user = null;
     _contacts = null;
+    currentUser = null;
     notifyListeners();
   }
+
 
   // Method to get user setup
   Future<UserSetupModel> getUserSetup(String userId) async {
@@ -166,7 +179,6 @@ class UserProvider with ChangeNotifier {
 
   Future<List<BookBuddy>> getBookBuddies({bool forceRefresh = false}) async {
     if (_user == null || forceRefresh) {
-      // Add a delay of 2 seconds
       await getUserSetup(AuthService.getInstance.currentUser!.uid);
     }
     return _user?.bookBuddies ?? [];
@@ -210,7 +222,11 @@ class UserProvider with ChangeNotifier {
           ...conversation.members,
           if (conversation.userResponse != null) conversation.userResponse!
         ],
-        lastMessage: latestChat?.message,
+        lastMessage: latestChat == null
+            ? null
+            : latestChat.isImage
+                ? '📷 Image'
+                : latestChat.message,
         lastMessageTime: latestChat?.timestamp,
         groupName: conversation.groupName,
         groupImage: conversation.groupImage,
@@ -253,7 +269,6 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-
       await _userService.createGroup(
         name: name,
         memberIds: memberIds,

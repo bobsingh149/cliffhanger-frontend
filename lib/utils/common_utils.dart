@@ -1,12 +1,6 @@
-import 'package:barter_frontend/models/post.dart';
-import 'package:barter_frontend/provider/post_provider.dart';
-import 'package:barter_frontend/theme/theme.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
 enum SnackbarMode {

@@ -1,5 +1,4 @@
 import 'package:barter_frontend/screens/book_buddies_screen.dart';
-import 'package:barter_frontend/screens/chat_screen.dart';
 import 'package:barter_frontend/screens/connection_requests_page.dart';
 import 'package:barter_frontend/provider/auth_provider.dart';
 import 'package:barter_frontend/provider/book_provider.dart';
@@ -13,7 +12,6 @@ import 'package:barter_frontend/screens/post_book.dart';
 import 'package:barter_frontend/screens/sign_in_page.dart';
 import 'package:barter_frontend/screens/user_onboarding.dart';
 import 'package:barter_frontend/screens/profile.dart';
-import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/theme/theme.dart';
 import 'package:barter_frontend/utils/app_logger.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
@@ -21,13 +19,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:introduction_screen/introduction_screen.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:barter_frontend/screens/contacts_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:barter_frontend/models/user.dart';
-import 'package:barter_frontend/models/contact.dart';
 import 'package:barter_frontend/screens/create_group_screen.dart';
 import 'package:barter_frontend/screens/link_screen.dart';
 import 'package:barter_frontend/screens/introduction.dart';
@@ -40,8 +35,16 @@ class ThemeProvider extends ChangeNotifier {
 
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
-  void setThemeMode(ThemeMode mode) {
+  Future<void> initializeTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDark = prefs.getBool('isDarkMode') ?? true;
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', mode == ThemeMode.dark);
     notifyListeners();
   }
 }
@@ -51,9 +54,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  final themeProvider = ThemeProvider();
+  await themeProvider.initializeTheme();
+
   runApp(
-    /// Providers are above [MyApp] instead of inside it, so that tests
-    /// can use [MyApp] while mocking the providers
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
@@ -61,7 +66,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => PostProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => AuthenticateProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: themeProvider),
       ],
       child: const BarterApp(),
     ),
@@ -119,15 +124,28 @@ class AuthCheck extends StatefulWidget {
 
 class _AuthCheckState extends State<AuthCheck> {
 
+  bool init=true;
   @override
   void initState() {
     super.initState();
+    // Remove theme initialization from here
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Initialize theme here instead
+
+    if(init){
+      Provider.of<ThemeProvider>(context, listen: false).initializeTheme();
+      init=false;
+    }
   }
 
   Future<bool> _checkNewUser() async {
     final prefs = await SharedPreferences.getInstance();
     bool isNewUser = !prefs.containsKey("introduction_done");
-    if (isNewUser) {	
+    if (isNewUser) {
       await prefs.setBool('introduction_done', true);
     }
     return isNewUser;
@@ -144,13 +162,13 @@ class _AuthCheckState extends State<AuthCheck> {
       case AppIntroductionScreen.routePath:
         return const AppIntroductionScreen();
       case MainScreen.routePath:
-        return MainScreen();
+        return MainScreen(fromPage: NavigationPage.mainScreen);
       case HomePage.routePath:
         return HomePage();
+      case BookBuddiesScreen.routePath:
+        return BookBuddiesScreen();
       case OnboardingPage.routePath:
         return OnboardingPage();
-      case ProfilePage.routePath:
-        return ProfilePage(userId: "user10");
       case SignInPage.routePath:
         return SignInPage();
       case PostBookPage.routePath:
@@ -164,7 +182,7 @@ class _AuthCheckState extends State<AuthCheck> {
       case CreateGroupScreen.routePath:
         return CreateGroupScreen();
       default:
-        return MainScreen(); // Default fallback
+        return MainScreen(fromPage: NavigationPage.mainScreen); // Default fallback
     }
   }
 
@@ -190,7 +208,8 @@ class _AuthCheckState extends State<AuthCheck> {
               if (newUserSnapshot.connectionState == ConnectionState.waiting) {
                 return CommonWidget.getLoader();
               }
-              AppLogger.instance.i("newUserSnapshot.data: ${newUserSnapshot.data}");
+              AppLogger.instance
+                  .i("newUserSnapshot.data: ${newUserSnapshot.data}");
               // If new user, show introduction screen
               if (newUserSnapshot.data == true) {
                 return const AppIntroductionScreen();
@@ -210,41 +229,97 @@ class _AuthCheckState extends State<AuthCheck> {
 }
 
 /* todo
-swipable cards for the mobile
-find book buddy button on the app bar 
-everyday new book buddy u can find
 
-shecdule post through the temporal
 
-send periodic mails to remind users to use the app
+1. read together with anyone not just connections similar to how barter works reading reuest have to be accepted and will be integrated with chat or seperate section
+2. add post to your lib will be a section in your porfile and used in recomednations
+3. also work on the FIRE tracker
+4. card controller do everything with it
+5. barter select your product u want to barter with then send request user accept barter request and chat will open witht hat info if already connected then in existing vhat in rpfile have barter request and in web side bar
+6. when u get a book buddy and u send a connect request it should be shown specially 
+7. Push notification for message
+8. in home page add the request icon button before book buddy
+9. there will be 3 tabs connection request with special tag for book buddy request and filter show only book buddy request,  reading request and barter request
 
-have searchbar on top of the page that will search based on title,author and subjects no need for subjects dropdown
 
-top bar chat and profile
+Core Features
+Chapter-by-Chapter Progress Sync
 
-bottom bar home,add book,settings
+Users can log their progress chapter-by-chapter or by percentage.
+A visual progress bar displays each buddy's current chapter or page.
+Discussion Threads for Chapters
 
-1. Make a check if onboaring is done , make a bool api on backend select 1 where
-2. update onboarding api to accept multipart data and send the same from client side
-   also make a city dropdown make it optional
-3. On homapge fetch data based on common count, only_barter based on same city then score
-4. Get a list of dropdown of all availiable subject make it searchable and filter based on it
-5. Make a settings page to be able to sign out and edit info
-6. Make a all connections page
-7. Make a bottom navigation bar 3 options homepage, add book, settings on top bar there will be 
-   chat and profile
+Create private discussion threads for each chapter.
+Include tools for marking spoilers to avoid ruining the experience for buddies who are behind.
+Reading Goals
 
-8. Make sure all the naviagtion is working
-9. Notifications for message and reminder to use the app 
-10. Implemnet the likes, comment if u like a specifc book do show more with same subjects
-11. Option to delete the post cannot be edited
-12. For home page consider the following give them common_book_count of user 
-   + common_subject_count of your books  +  bias if it is from your connetion or book you liked 
-    common subject count 
+Set shared reading goals (e.g., “Finish Chapter 10 by Friday”).
+Provide reminders or nudges to stay on track.
+Book Annotations and Highlights
 
-    there will be bias for liked book common subject count and liked book user
-    everything will also have a weight
-13. either show post image or cover image make titleclickable and show info about book
-  in show dialog
+Allow buddies to share highlighted passages, quotes, or notes directly within the app.
+Use tags (e.g., "funny," "thought-provoking") to categorize annotations.
+Real-Time Notifications
+
+Notify buddies when a user logs progress or completes a milestone, like finishing a chapter or the book.
+Gamification
+Reading Streaks
+
+Track streaks for consistent reading.
+Reward buddies for hitting milestones together (e.g., finishing a book, completing weekly goals).
+Achievements and Badges
+
+Grant badges for reading accomplishments, like "Weekend Warrior" for completing a big chunk over a weekend.
+Friendly Competition
+
+Add leaderboards for things like fastest progress or most notes shared.
+Ensure it's collaborative and fun, not overly competitive.
+Social and Interactive Features
+Buddy Invites
+
+Easily invite a friend to a buddy read using app links or QR codes.
+Display mutual book interests to suggest books for reading together.
+Group Reads
+
+Expand to include small groups for book clubs or friend circles.
+Display group progress with visual cues (e.g., bar charts or pie charts).
+Virtual Reading Sessions
+
+Provide options for timed reading sessions where buddies can read "together" virtually.
+Add timers or focus music to simulate a co-reading experience.
+Customization
+Personalized Reading Schedules
+
+Adjust reading schedules based on each buddy’s availability.
+Include "catch-up" days for those who fall behind.
+Progress Privacy Settings
+
+Let users decide what progress to share (e.g., only completed chapters, detailed notes, or just general milestones).
+Themed Buddy Spaces
+
+Allow customization of discussion threads with themes (e.g., fantasy, mystery, sci-fi) or emojis that match the book.
+Advanced Features
+AI-Generated Discussion Prompts
+
+Provide AI-generated questions or prompts for each chapter to spark meaningful discussions.
+Tailor prompts based on the book’s genre or themes.
+Integrated Media Sharing
+
+Allow buddies to share related media (e.g., book trailers, fan art, or relevant articles) in the discussion thread.
+Cross-Platform Sync
+
+Sync progress across devices and platforms (web, mobile app, e-reader integrations).
+Analytics and Insights
+Reading Insights Dashboard
+
+Show progress analytics like average pages per session or total hours spent reading.
+Compare individual and buddy progress trends.
+Shared Timeline
+
+Display a timeline of the buddy read, showing milestones achieved and upcoming goals.
+Most Loved Sections
+
+Highlight chapters or sections with the most notes, annotations, or engagement between buddies.
+
   
 */

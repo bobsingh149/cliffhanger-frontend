@@ -1,7 +1,5 @@
 import 'package:barter_frontend/models/save_conversation_input.dart';
 import 'package:barter_frontend/models/save_request_input.dart';
-import 'package:barter_frontend/models/user.dart';
-import 'package:barter_frontend/screens/profile.dart';
 import 'package:barter_frontend/services/auth_services.dart';
 import 'package:barter_frontend/utils/common_utils.dart';
 import 'package:flutter/foundation.dart';
@@ -13,10 +11,11 @@ import 'package:provider/provider.dart';
 import 'package:barter_frontend/widgets/common_widgets.dart';
 import 'package:barter_frontend/models/user_setup.dart';
 import 'package:barter_frontend/utils/common_decoration.dart';
+import 'package:barter_frontend/screens/main_screen.dart';
 
 class ConnectionRequestsPage extends StatefulWidget {
   static const String routePath = "/connection-requests";
-   ConnectionRequestsPage({super.key});
+  ConnectionRequestsPage({super.key});
 
   @override
   State<ConnectionRequestsPage> createState() => _ConnectionRequestsPageState();
@@ -30,8 +29,7 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: !kIsWeb,
-                backgroundColor: theme.colorScheme.background,
-
+        backgroundColor: theme.colorScheme.background,
         title: Text(
           'Connection Requests',
         ),
@@ -46,7 +44,7 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // TODO: Implement refresh logic
+          Provider.of<UserProvider>(context, listen: true).clearUserSetup();
         },
         child: Padding(
           padding: EdgeInsets.only(top: 12.h),
@@ -118,13 +116,10 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
       final theme = Theme.of(context);
       final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-
       void handleAccept() async {
         try {
           final input = SaveConversationInput(
-            isGroup: false,
-            userId: request.userResponse.id
-          );
+              isGroup: false, userId: request.userResponse.id);
 
           await userProvider.saveConnection(input);
 
@@ -135,8 +130,6 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
               mode: SnackbarMode.success,
             );
           }
-
-       
         } catch (e) {
           if (context.mounted) {
             CommonUtils.displaySnackbar(
@@ -153,7 +146,6 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
           final input = SaveRequestInput(
             id: AuthService.getInstance.currentUser!.uid,
             requestId: request.userResponse.id,
-      
           );
 
           await userProvider.removeRequest(input);
@@ -165,8 +157,6 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
               mode: SnackbarMode.success,
             );
           }
-
-       
         } catch (e) {
           if (context.mounted) {
             CommonUtils.displaySnackbar(
@@ -185,9 +175,7 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
-        
           side: CommonDecoration.getWebAwareBorderSide(context),
-          
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
@@ -219,10 +207,12 @@ class _ConnectionRequestsPageState extends State<ConnectionRequestsPage> {
                         children: [
                           InkWell(
                             onTap: () {
-                              Navigator.push(
+                              Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ProfilePage(
+                                  builder: (context) => MainScreen(
+                                    initialPage: NavigationPage.profile,
+                                    fromPage: NavigationPage.connectionRequests,
                                     userId: request.userResponse.id,
                                   ),
                                 ),
